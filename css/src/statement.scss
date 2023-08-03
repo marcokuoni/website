@@ -1,0 +1,92 @@
+article.statement {
+    background-color: black;
+
+    .wrapper {
+        margin: 0 auto;
+        max-width: 1500px;
+        padding: 5rem 3rem;
+        padding-bottom: 1rem;
+        display: flex;
+        flex-direction: row;
+        height: 50vh;
+
+        @media screen and (max-width: 1502px) {
+            padding: 5rem 3rem;
+            padding-bottom: 6rem;
+        }
+        @media screen and (max-width: 1098px) {
+            flex-direction: column;
+            height: auto;
+            text-align: center;
+            padding-top: 1rem;
+        }
+
+        @media screen and (max-width: 700px) {
+            padding: 2rem;
+        }
+
+        section {
+            &:first-child {
+                .circle {
+                    display: inline-block;
+                    width: 35vh;
+                    height: 35vh;
+                    border-radius: 50%;
+                    overflow: hidden;
+                    flex-shrink: 0;
+                    margin: 3rem 0;
+                }
+
+                .circle img {
+                    height: 100%;
+                    margin: 0 auto;
+                }
+            }
+
+            &:last-child {
+                text-align: right;
+
+                @media screen and (max-width: 1098px) {
+                    text-align: center;
+                }
+
+                blockquote {
+                    font-family: 'Times New Roman', Times, serif;
+                    letter-spacing: 0.3rem;
+                    @include rfs(5rem);
+                    color: white;
+                    margin: 0;
+                    margin-left: 5rem;
+                    line-height: 1.3;
+
+                    @media screen and (max-width: 1098px) {
+                        margin-left: 0;
+                    }
+
+                    div {
+                        @include rfs(15rem);
+                        line-height: 0.6;
+                        margin-top: -2rem;
+                        margin-bottom: 1rem;
+
+                        @media screen and (max-width: 740px) {
+                            margin-top: -1.3rem;
+                        }
+
+                        @media screen and (max-width: 400px) {
+                            margin-top: -1rem;
+                        }
+                    }
+
+                    .text-left {
+                        text-align: left;
+                    }
+
+                    .text-right {
+                        text-align: right;
+                    }
+                }
+            }
+        }
+    }
+}
