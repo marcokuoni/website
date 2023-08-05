@@ -32,12 +32,20 @@ header {
 
     .circle {
         display: inline-block;
-        width: 300px;
-        height: 300px;
+        width: 30vw;
+        height: 30vw;
         border-radius: 50%;
         overflow: hidden;
         flex-shrink: 0;
         margin: 3rem 0;
+
+        max-width: 435px;
+        max-height: 435px;
+
+        @media screen and (max-width: 1350px) {
+            width: 45vw;
+            height: 45vw;
+        }
     }
 
     .circle img {
@@ -52,6 +60,10 @@ header {
         justify-content: center;
         align-items: center;
         gap: 6rem;
+
+        @media screen and (max-width: 1350px) {
+            gap: 3rem;
+        }
     }
 
     .line {
@@ -70,23 +82,36 @@ header {
 
     h1 {
         font-family: 'Times New Roman', Times, serif;
-        letter-spacing: 0.3rem;
-        @include rfs(5rem);
+        letter-spacing: 0.15rem;
+        @include rfs(7rem);
+
+        @media screen and (max-width: 1350px) {
+            @include rfs(5rem);
+        }
     }
 
     h2 {
         font-family: 'Courier New', Courier, monospace;
         font-weight: 400;
         color: grey;
-        @include rfs(1.75rem);
-        margin-top: 0.4rem;
+        margin-top: 1rem;
+        font-size: 2.6rem;
+
+        @media screen and (max-width: 1350px) {
+            margin-top: 0.5rem;
+            font-size: 1.75rem;
+        }
     }
 
     h3,
     h4 {
         font-family: 'Courier New', Courier, monospace;
         font-weight: 400;
-        @include rfs(1rem);
+        font-size: 1.5rem;
+
+        @media screen and (max-width: 1350px) {
+            font-size: 1rem;
+        }
     }
 
     .software {

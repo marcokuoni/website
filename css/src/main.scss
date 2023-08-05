@@ -1,6 +1,13 @@
 @import './normalize.scss';
 @import './variables.scss';
 
-@import './header.scss';
-@import './intro.scss';
-@import './statement.scss';
+.marcokuoni {
+    @import './header.scss';
+    @import './intro.scss';
+    @import './statement.scss';
+    @import './knowledge.scss';
+    @import './timeline.scss';
+    @import './footer.scss';
+}
+
+@import './impressum.scss';
