@@ -1,9 +1,9 @@
 # -- concrete5 urls start --
 <IfModule mod_rewrite.c>
-	# RewriteCond %{HTTPS} =off
-	# RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [QSA,L,R=301]
-	# RewriteCond %{HTTP_HOST} ^www\.domain\.ch [NC]
-	# RewriteRule ^(.*)$ https://domain.ch/$1 [L,R=301]
+	RewriteCond %{HTTPS} =off
+	RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [QSA,L,R=301]
+	RewriteCond %{HTTP_HOST} ^www\.marcokuoni\.ch [NC]
+	RewriteRule ^(.*)$ https://marcokuoni.ch/$1 [L,R=301]
 
 	RewriteEngine On
 	RewriteBase /
@@ -79,10 +79,3 @@ Header set Cache-Control "max-age=604800, public"
       Header set Note "CACHING IS DISABLED FOR EDIT"
       Header set Expires "Wed, 11 Jan 1984 05:00:00 GMT"
 </If>
-
-# Enable this lines on staging enviroments
-# AuthType Basic
-# AuthName "Restricted Content"
-# AuthUserFile /var/www/html/bankavera/public/.htpasswd
-# Require valid-user
-
