@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Marco Kuoni" />
+  <meta name="keywords" content="WebAssembly, wasi, javascript, Webdev, Webdeveloper, web, html, browser, webapp, webapplication, webapplications, programming, coding, software, technology" />
+  <title>“Hello World” C++ Progra</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    div.abstract {
+      margin: 2em 2em 2em 2em;
+      text-align: left;
+      font-size: 85%;
+    }
+    div.abstract-title {
+      font-weight: bold;
+      text-align: center;
+      padding: 0;
+      margin-bottom: 0.5em;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">“Hello World” C++ Progra</h1>
+<p class="subtitle">Is a simple C++ program, but how to implement it so
+that it can be used in a web application as WebAssembly?</p>
+<p class="author">Marco Kuoni</p>
+<p class="date">2023-09-18T00:00:00+0100</p>
+<div class="abstract">
+<div class="abstract-title">Abstract</div>
+<p>Is a simple C++ program, but how to implement it so that it can be
+used in a web application as WebAssembly</p>
+</div>
+</header>
+<h1 id="hello-world-c-program">“Hello World” C++ Program</h1>
+<p>Is a simple C++ program, but how to implement it so that it can be
+used in a web application as WebAssembly? This article will not delve
+into the details of C++ and <code>clang</code>, or compiling with
+<code>Makefile</code>. It is primarily about highlighting the key points
+to understand the interaction between C++, WebAssembly, and the web
+application. But if more explanation is desired here, gladly simply
+report.</p>
+<h2 id="program">Program</h2>
+<p>Here is the program <code>hello_world.cpp</code> all the rest will be
+find on the <a
+href="https://github.com/marcokuoni/public_doc/tree/main/essays/6_hello_world_cpp_programm">GitHub</a></p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode cpp"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&quot;nanolibc/libc.h&quot;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#define WASM_EXPORT </span><span class="ex">__attribute__((visibility(</span><span class="st">&quot;default&quot;</span><span class="ex">)))</span><span class="pp"> </span><span class="at">extern</span><span class="pp"> </span><span class="st">&quot;C&quot;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>WASM_EXPORT <span class="dt">void</span> helloWorld<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  printf<span class="op">(</span><span class="st">&quot;Hello, World!</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Short Description: * <code>#include</code> is the header file that
+provides the function signatures of nanolibc. In this example, the
+<code>printf</code> function is used from it, which comes from <a
+href="https://github.com/mpaland/printf/tree/master">Marco Paland</a>.
+This <code>printf</code> function uses the <code>_putchar</code>
+function within the <code>_out_char</code> helper function
+(<code>printf.cpp</code> line 128). The <code>_putchar</code> function
+is defined in the <code>putchar.cpp</code> file and uses the
+<code>print_string</code> function (line 19). The
+<code>print_string</code> signature comes from the
+<code>libc_enviroment.h</code> header file and is defined there as an
+external. The implementation of <code>print_string</code> is not present
+in C++. This function serves as an interface to the guest system and is
+provided by it. This implementation style is inspired by the project of
+<a href="https://github.com/PetterS/clang-wasm/tree/master">Peter
+Strandmark</a>. * <code>#define</code> defines the
+<code>WASM_EXPORT</code> macro, which is used to export functions in
+WebAssembly so that they can be used by the web application. For more
+information, refer to the <a
+href="https://lld.llvm.org/WebAssembly.html">WebAssembly Linker
+Documentation</a> under <code>--export-dynamic</code>.</p>
+<h3 id="compilation">Compilation</h3>
+<p>The program is compiled using the <code>make</code> command, which
+uses the following <code>Makefile</code>.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode makefile"><code class="sourceCode makefile"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">DEPS</span> <span class="ch">=</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="dt">OBJ</span> <span class="ch">=</span><span class="st"> hello_world.o</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="dt">NANOLIBC_OBJ</span> <span class="ch">=</span><span class="st"> </span><span class="ch">$(</span><span class="kw">patsubst</span><span class="st"> %.cpp</span><span class="kw">,</span><span class="st">%.o</span><span class="kw">,</span><span class="ch">$(</span><span class="kw">wildcard</span><span class="st"> nanolibc/*.cpp</span><span class="ch">))</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="dt">OUTPUT</span> <span class="ch">=</span><span class="st"> hello_world.wasm</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="dt">COMPILE_FLAGS</span> <span class="ch">=</span><span class="st"> -Wall </span><span class="ch">\</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="st">        --target=wasm32 </span><span class="ch">\</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="st">        -Os </span><span class="ch">\</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="st">        -nostdlib </span><span class="ch">\</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="st">        -fvisibility=hidden </span><span class="ch">\</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="st">        -std=c++14 </span><span class="ch">\</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="st">        -ffunction-sections </span><span class="ch">\</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="st">        -fdata-sections </span><span class="ch">\</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="st">        -DPRINTF_DISABLE_SUPPORT_FLOAT=1 </span><span class="ch">\</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="st">        -DPRINTF_DISABLE_SUPPORT_LONG_LONG=1 </span><span class="ch">\</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="st">        -DPRINTF_DISABLE_SUPPORT_PTRDIFF_T=1</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="dv">$(OUTPUT):</span><span class="dt"> </span><span class="ch">$(</span><span class="dt">OBJ</span><span class="ch">)</span><span class="dt"> </span><span class="ch">$(</span><span class="dt">NANOLIBC_OBJ</span><span class="ch">)</span><span class="dt"> Makefile</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="er">    </span>wasm-ld \</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        <span class="ch">-</span><span class="fu">o </span><span class="ch">$(</span><span class="dt">OUTPUT</span><span class="ch">)</span><span class="fu"> </span><span class="ch">\</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="fu">        --no-entry </span><span class="ch">\</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="fu">        --strip-all </span><span class="ch">\</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="fu">        --export-dynamic </span><span class="ch">\</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="fu">        --allow-undefined </span><span class="ch">\</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="fu">        --initial-memory=131072 </span><span class="ch">\</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="fu">        -error-limit=0 </span><span class="ch">\</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="fu">        --lto-O3 </span><span class="ch">\</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="fu">        -O3 </span><span class="ch">\</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="fu">        --gc-sections </span><span class="ch">\</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="fu">        </span><span class="ch">$(</span><span class="dt">OBJ</span><span class="ch">)</span><span class="fu"> </span><span class="ch">\</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="fu">        </span><span class="ch">$(</span><span class="dt">LIBCXX_OBJ</span><span class="ch">)</span><span class="fu"> </span><span class="ch">\</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="fu">        </span><span class="ch">$(</span><span class="dt">NANOLIBC_OBJ</span><span class="ch">)</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="dv">%.o:</span><span class="dt"> %.cpp </span><span class="ch">$(</span><span class="dt">DEPS</span><span class="ch">)</span><span class="dt"> Makefile nanolibc/libc.h nanolibc/libc_enviroment.h</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="er">    </span>clang++ \</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>        <span class="ch">-</span><span class="fu">c </span><span class="ch">\</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="fu">        </span><span class="ch">$(</span><span class="dt">COMPILE_FLAGS</span><span class="ch">)</span><span class="fu"> </span><span class="ch">\</span></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="fu">        -o </span><span class="ch">$@</span><span class="fu"> </span><span class="ch">\</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="fu">        </span><span class="ch">$&lt;</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="dv">hello_world.wat:</span><span class="dt"> </span><span class="ch">$(</span><span class="dt">OUTPUT</span><span class="ch">)</span><span class="dt"> Makefile</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a><span class="er">    </span>wasm2wat -o hello_world.wat <span class="ch">$(</span><span class="dt">OUTPUT</span><span class="ch">)</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="dv">wat:</span><span class="dt"> hello_world.wat</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a><span class="dv">clean:</span></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a><span class="er">    </span>rm -f <span class="ch">$(</span><span class="dt">OBJ</span><span class="ch">)</span> <span class="ch">$(</span><span class="dt">NANOLIBC_OBJ</span><span class="ch">)</span> <span class="ch">$(</span><span class="dt">OUTPUT</span><span class="ch">)</span> hello_world.wat</span></code></pre></div>
+<p>Under Ubuntu, the following packages need to be installed:
+<code>sudo apt install clang lld make</code>.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> make</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">clang</span>++ <span class="dt">\</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">-c</span> <span class="dt">\</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">-Wall</span> <span class="at">--target</span><span class="op">=</span>wasm32 <span class="at">-Os</span> <span class="at">-nostdlib</span> <span class="at">-fvisibility</span><span class="op">=</span>hidden <span class="at">-std</span><span class="op">=</span>c++14 <span class="at">-ffunction-sections</span> <span class="at">-fdata-sections</span> <span class="at">-DPRINTF_DISABLE_SUPPORT_FLOAT</span><span class="op">=</span>1 <span class="at">-DPRINTF_DISABLE_SUPPORT_LONG_LONG</span><span class="op">=</span>1 <span class="at">-DPRINTF_DISABLE_SUPPORT_PTRDIFF_T</span><span class="op">=</span>1 <span class="dt">\</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">-o</span> hello_world.o <span class="dt">\</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        hello_world.cpp</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">clang</span>++ <span class="dt">\</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="at">-c</span> <span class="dt">\</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">-Wall</span> <span class="at">--target</span><span class="op">=</span>wasm32 <span class="at">-Os</span> <span class="at">-nostdlib</span> <span class="at">-fvisibility</span><span class="op">=</span>hidden <span class="at">-std</span><span class="op">=</span>c++14 <span class="at">-ffunction-sections</span> <span class="at">-fdata-sections</span> <span class="at">-DPRINTF_DISABLE_SUPPORT_FLOAT</span><span class="op">=</span>1 <span class="at">-DPRINTF_DISABLE_SUPPORT_LONG_LONG</span><span class="op">=</span>1 <span class="at">-DPRINTF_DISABLE_SUPPORT_PTRDIFF_T</span><span class="op">=</span>1 <span class="dt">\</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">-o</span> nanolibc/libc.o <span class="dt">\</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        nanolibc/libc.cpp</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="fu">clang</span>++ <span class="dt">\</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="at">-c</span> <span class="dt">\</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">-Wall</span> <span class="at">--target</span><span class="op">=</span>wasm32 <span class="at">-Os</span> <span class="at">-nostdlib</span> <span class="at">-fvisibility</span><span class="op">=</span>hidden <span class="at">-std</span><span class="op">=</span>c++14 <span class="at">-ffunction-sections</span> <span class="at">-fdata-sections</span> <span class="at">-DPRINTF_DISABLE_SUPPORT_FLOAT</span><span class="op">=</span>1 <span class="at">-DPRINTF_DISABLE_SUPPORT_LONG_LONG</span><span class="op">=</span>1 <span class="at">-DPRINTF_DISABLE_SUPPORT_PTRDIFF_T</span><span class="op">=</span>1 <span class="dt">\</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">-o</span> nanolibc/memory.o <span class="dt">\</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        nanolibc/memory.cpp</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="fu">clang</span>++ <span class="dt">\</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>        <span class="at">-c</span> <span class="dt">\</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>        <span class="at">-Wall</span> <span class="at">--target</span><span class="op">=</span>wasm32 <span class="at">-Os</span> <span class="at">-nostdlib</span> <span class="at">-fvisibility</span><span class="op">=</span>hidden <span class="at">-std</span><span class="op">=</span>c++14 <span class="at">-ffunction-sections</span> <span class="at">-fdata-sections</span> <span class="at">-DPRINTF_DISABLE_SUPPORT_FLOAT</span><span class="op">=</span>1 <span class="at">-DPRINTF_DISABLE_SUPPORT_LONG_LONG</span><span class="op">=</span>1 <span class="at">-DPRINTF_DISABLE_SUPPORT_PTRDIFF_T</span><span class="op">=</span>1 <span class="dt">\</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>        <span class="at">-o</span> nanolibc/printf.o <span class="dt">\</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>        nanolibc/printf.cpp</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="fu">clang</span>++ <span class="dt">\</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        <span class="at">-c</span> <span class="dt">\</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>        <span class="at">-Wall</span> <span class="at">--target</span><span class="op">=</span>wasm32 <span class="at">-Os</span> <span class="at">-nostdlib</span> <span class="at">-fvisibility</span><span class="op">=</span>hidden <span class="at">-std</span><span class="op">=</span>c++14 <span class="at">-ffunction-sections</span> <span class="at">-fdata-sections</span> <span class="at">-DPRINTF_DISABLE_SUPPORT_FLOAT</span><span class="op">=</span>1 <span class="at">-DPRINTF_DISABLE_SUPPORT_LONG_LONG</span><span class="op">=</span>1 <span class="at">-DPRINTF_DISABLE_SUPPORT_PTRDIFF_T</span><span class="op">=</span>1 <span class="dt">\</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>        <span class="at">-o</span> nanolibc/putchar.o <span class="dt">\</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>        nanolibc/putchar.cpp</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="ex">wasm-ld</span> <span class="dt">\</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>        <span class="at">-o</span> hello_world.wasm <span class="dt">\</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>        <span class="at">--no-entry</span> <span class="dt">\</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>        <span class="at">--strip-all</span> <span class="dt">\</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>        <span class="at">--export-dynamic</span> <span class="dt">\</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>        <span class="at">--allow-undefined</span> <span class="dt">\</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>        <span class="at">--initial-memory</span><span class="op">=</span>131072 <span class="dt">\</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>        <span class="at">-error-limit</span><span class="op">=</span>0 <span class="dt">\</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>        <span class="at">--lto-O3</span> <span class="dt">\</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>        <span class="at">-O3</span> <span class="dt">\</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>        <span class="at">--gc-sections</span> <span class="dt">\</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>        hello_world.o <span class="dt">\</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>         <span class="dt">\</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>        nanolibc/libc.o nanolibc/memory.o nanolibc/printf.o nanolibc/putchar.o</span></code></pre></div>
+<p>Analyzing <code>wasm-objdump -x hello_world.wasm</code>.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> wasm-objdump <span class="at">-x</span> hello_world.wasm</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">hello_world.wasm:</span>       file format wasm 0x1</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">Section</span> Details:</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="va">Type</span><span class="op">[</span><span class="dv">8</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i32, i32, i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> nil</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32</span><span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> nil</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> <span class="er">(</span><span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> nil</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">3</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i32, i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i32</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">4</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32</span><span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i32</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">5</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i32</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">6</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i32, i32, i32, i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i32</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">7</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i32, i32, i32, i32, i32, i32, i32, i32, i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i32</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="va">Import</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> sig=1 <span class="op">&lt;</span>env.print_string<span class="op">&gt;</span> <span class="op">&lt;</span>- env.print_string</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="va">Function</span><span class="op">[</span><span class="dv">18</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> sig=2 <span class="op">&lt;</span>helloWorld<span class="op">&gt;</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> sig=2</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">3</span><span class="pp">]</span> sig=3</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">4</span><span class="pp">]</span> sig=4</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">5</span><span class="pp">]</span> sig=4 <span class="op">&lt;</span>_Znwm<span class="op">&gt;</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">6</span><span class="pp">]</span> sig=4</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">7</span><span class="pp">]</span> sig=2</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">8</span><span class="pp">]</span> sig=4</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">9</span><span class="pp">]</span> sig=4 <span class="op">&lt;</span>_Znam<span class="op">&gt;</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">10</span><span class="pp">]</span> sig=1 <span class="op">&lt;</span>_ZdlPv<span class="op">&gt;</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">11</span><span class="pp">]</span> sig=1</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">12</span><span class="pp">]</span> sig=1 <span class="op">&lt;</span>_ZdaPv<span class="op">&gt;</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">13</span><span class="pp">]</span> sig=5</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">14</span><span class="pp">]</span> sig=0</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">15</span><span class="pp">]</span> sig=6</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">16</span><span class="pp">]</span> sig=0</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">17</span><span class="pp">]</span> sig=7</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">18</span><span class="pp">]</span> sig=1</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a><span class="va">Table</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> table<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> type=funcref initial=3 max=3</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a><span class="va">Memory</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> memory<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> pages: initial=2</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a><span class="va">Global</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> i32 mutable=1 <span class="at">-</span> init i32=66976</span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a><span class="va">Export</span><span class="op">[</span><span class="dv">6</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> memory<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="at">-</span><span class="op">&gt;</span> <span class="st">&quot;memory&quot;</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> <span class="op">&lt;</span>helloWorld<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;helloWorld&quot;</span></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">5</span><span class="pp">]</span> <span class="op">&lt;</span>_Znwm<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;_Znwm&quot;</span></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">9</span><span class="pp">]</span> <span class="op">&lt;</span>_Znam<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;_Znam&quot;</span></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">10</span><span class="pp">]</span> <span class="op">&lt;</span>_ZdlPv<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;_ZdlPv&quot;</span></span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">12</span><span class="pp">]</span> <span class="op">&lt;</span>_ZdaPv<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;_ZdaPv&quot;</span></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a><span class="va">Elem</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> segment<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> flags=0 table=0 count=2 <span class="at">-</span> init i32=1</span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> elem<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> = func<span class="pp">[</span><span class="ss">14</span><span class="pp">]</span></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> elem<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> = func<span class="pp">[</span><span class="ss">16</span><span class="pp">]</span></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a><span class="va">Code</span><span class="op">[</span><span class="dv">18</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> size=15 <span class="op">&lt;</span>helloWorld<span class="op">&gt;</span></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> size=3</span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">3</span><span class="pp">]</span> size=44</span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">4</span><span class="pp">]</span> size=12</span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">5</span><span class="pp">]</span> size=10 <span class="op">&lt;</span>_Znwm<span class="op">&gt;</span></span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">6</span><span class="pp">]</span> size=569</span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">7</span><span class="pp">]</span> size=355</span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">8</span><span class="pp">]</span> size=100</span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">9</span><span class="pp">]</span> size=10 <span class="op">&lt;</span>_Znam<span class="op">&gt;</span></span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">10</span><span class="pp">]</span> size=10 <span class="op">&lt;</span>_ZdlPv<span class="op">&gt;</span></span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">11</span><span class="pp">]</span> size=131</span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">12</span><span class="pp">]</span> size=10 <span class="op">&lt;</span>_ZdaPv<span class="op">&gt;</span></span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">13</span><span class="pp">]</span> size=66</span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">14</span><span class="pp">]</span> size=18</span>
+<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">15</span><span class="pp">]</span> size=1924</span>
+<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">16</span><span class="pp">]</span> size=2</span>
+<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">17</span><span class="pp">]</span> size=789</span>
+<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">18</span><span class="pp">]</span> size=176</span>
+<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a><span class="va">Data</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> segment<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> memory=0 size=385 <span class="at">-</span> init i32=1024</span>
+<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0000400: 6e61 6e6f 6c69 6263 2f6d 656d 6f72 792e  nanolibc/memory.</span>
+<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0000410: 6370 7000 4d65 6d6f 7279 2064 756d 7000  cpp.Memory dump.</span>
+<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0000420: 6f6c 645f 7369 7a65 203d 3d20 6375 7272  old_size == curr</span>
+<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0000430: 656e 742d 3e73 697a 6520 2b20 7369 7a65  ent-<span class="op">&gt;</span>size + size</span>
+<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0000440: 6f66 284d 656d 6f72 7942 6c6f 636b 2920  of<span class="er">(</span><span class="ex">MemoryBlock</span><span class="kw">)</span></span>
+<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0000450: 2b20 6e65 7874 2d3e 7369 7a65 0048 656c  + next-<span class="op">&gt;</span>size.Hel</span>
+<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0000460: 6c6f 2057 6f72 6c64 0062 6c6f 636b 2d3e  lo World.block-<span class="op">&gt;</span></span>
+<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0000470: 7374 6174 6520 3d3d 204d 656d 6f72 7942  state == MemoryB</span>
+<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0000480: 6c6f 636b 3a3a 5374 6174 653a 3a46 5245  lock::State::FRE</span>
+<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0000490: 4500 626c 6f63 6b2d 3e73 7461 7465 203d  E.block-<span class="op">&gt;</span>state =</span>
+<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 00004a0: 3d20 4d65 6d6f 7279 426c 6f63 6b3a 3a53  = MemoryBlock::S</span>
+<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 00004b0: 7461 7465 3a3a 4652 4545 207c 7c20 626c  tate::FREE <span class="kw">||</span> <span class="ex">bl</span></span>
+<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 00004c0: 6f63 6b2d 3e73 7461 7465 203d 3d20 4d65  ock-<span class="op">&gt;</span>state == Me</span>
+<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 00004d0: 6d6f 7279 426c 6f63 6b3a 3a53 7461 7465  moryBlock::State</span>
+<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 00004e0: 3a3a 414c 4c4f 4341 5445 4400 2020 5065  ::ALLOCATED.  Pe</span>
+<span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 00004f0: 616b 206d 656d 6f72 7920 7573 6167 653a  ak memory usage:</span>
+<span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0000500: 2025 3964 2062 7974 6573 2e0a 0020 2054   %9d bytes...  T</span>
+<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0000510: 6f74 2e20 6d65 6d6f 7279 2075 7361 6765  ot. memory usage</span>
+<span id="cb4-93"><a href="#cb4-93" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0000520: 3a20 2539 6420 6279 7465 732e 0a00 2020  : %9d bytes...</span>
+<span id="cb4-94"><a href="#cb4-94" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0000530: 4375 722e 206d 656d 6f72 7920 7573 6167  Cur. memory usag</span>
+<span id="cb4-95"><a href="#cb4-95" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0000540: 653a 2025 3964 2062 7974 6573 2e0a 004d  e: %9d bytes...M</span>
+<span id="cb4-96"><a href="#cb4-96" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0000550: 656d 6f72 7920 6572 726f 7220 6174 2025  emory error at %</span>
+<span id="cb4-97"><a href="#cb4-97" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0000560: 733a 2564 3a20 2573 2e0a 0020 2030 7825  s:%d: %s...  0x%</span>
+<span id="cb4-98"><a href="#cb4-98" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0000570: 583a 2073 697a 6520 2564 2e20 2573 2e0a  X: size %d. %s..</span>
+<span id="cb4-99"><a href="#cb4-99" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0000580: 00                                       .</span></code></pre></div>
+<p>A few quick notes: * <code>Import[1]</code> expects the import from
+the <code>env.print_string</code> function. * <code>Export[6]</code>: In
+addition to <code>memory</code>, the <code>helloWorld</code> function is
+also exported. * <code>Data[1]</code>: The fixed string
+<code>Hello World</code> can be found in the segment at address lines
+<code>0000450</code> and <code>0000460</code>.</p>
+<blockquote>
+<p>By using the <code>--import-memory</code> option during linking in
+the <code>Makefile</code>, WebAssembly would not export memory but
+instead expect it to be provided by the guest system, thereby importing
+it. Refer to the <a
+href="https://lld.llvm.org/WebAssembly.html">WebAssembly Linker
+Documentation</a> under <code>--import-memory</code>, as well as the
+comments in the next chapter of this article.</p>
+</blockquote>
+<blockquote>
+<p>Additionally, with <code>make wat</code>, the WAT format can be
+generated, and the commands for the stack machine can be analyzed. On
+Ubuntu, the package <code>sudo apt install wabt</code> must be
+installed.</p>
+</blockquote>
+<h4 id="usage-in-a-web-application">Usage in a Web Application</h4>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;!DOCTYPE</span> html<span class="dt">&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">html</span><span class="ot"> lang</span><span class="op">=</span><span class="st">&quot;en&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">head</span><span class="dt">&gt;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> charset</span><span class="op">=</span><span class="st">&quot;utf-8&quot;</span><span class="ot"> </span><span class="dt">/&gt;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">title</span><span class="dt">&gt;</span>&quot;Hello Wolrd&quot; C++ Program<span class="dt">&lt;/</span><span class="kw">title</span><span class="dt">&gt;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">head</span><span class="dt">&gt;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span><span class="dt">&gt;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">h1</span><span class="ot"> id</span><span class="op">=</span><span class="st">&quot;hello-world&quot;</span><span class="dt">&gt;&lt;/</span><span class="kw">h1</span><span class="dt">&gt;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> wasm<span class="op">;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>        <span class="co">// If the Webassemby module had been linked with</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        <span class="co">//   --import-memory</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        <span class="co">//</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        <span class="co">// its memory will be provided with</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        <span class="co">//   const wasmMemory = new WebAssembly.Memory({initial:10, maximum:100});</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        <span class="co">//   const memory = new Uint8Array(wasmMemory.buffer);</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>        <span class="co">//</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>        <span class="co">// But this module is providing its own memory and exporting it.</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>        <span class="kw">function</span> <span class="fu">get_memory</span>() {</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="kw">new</span> <span class="bu">Uint8Array</span>(wasm<span class="op">.</span><span class="at">instance</span><span class="op">.</span><span class="at">exports</span><span class="op">.</span><span class="at">memory</span><span class="op">.</span><span class="at">buffer</span>)<span class="op">;</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> decoder <span class="op">=</span> <span class="kw">new</span> <span class="fu">TextDecoder</span>(<span class="st">&quot;utf-8&quot;</span>)<span class="op">;</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>        <span class="kw">function</span> <span class="fu">charPtrToString</span>(str) {</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>            <span class="kw">const</span> memory <span class="op">=</span> <span class="fu">get_memory</span>()<span class="op">;</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> length <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> (<span class="op">;</span> memory[str <span class="op">+</span> length] <span class="op">!==</span> <span class="dv">0</span><span class="op">;</span> <span class="op">++</span>length) { }</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> decoder<span class="op">.</span><span class="fu">decode</span>(memory<span class="op">.</span><span class="fu">subarray</span>(str<span class="op">,</span> str <span class="op">+</span> length))<span class="op">;</span></span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> printString <span class="op">=</span> <span class="kw">function</span> (str) {</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>            <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(str)<span class="op">;</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>            <span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&quot;hello-world&quot;</span>)<span class="op">.</span><span class="at">innerHTML</span> <span class="op">=</span> str<span class="op">;</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>        }<span class="op">;</span></span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> importObject <span class="op">=</span> {</span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>            <span class="dt">env</span><span class="op">:</span> {</span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>                <span class="dt">print_string</span><span class="op">:</span> <span class="kw">function</span> (str) {</span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">printString</span>(<span class="fu">charPtrToString</span>(str))<span class="op">;</span></span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>                }</span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>            }</span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>        }<span class="op">;</span></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>        WebAssembly<span class="op">.</span><span class="fu">instantiateStreaming</span>(<span class="fu">fetch</span>(<span class="st">&#39;hello_world.wasm&#39;</span>)<span class="op">,</span> importObject)</span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="fu">then</span>(<span class="kw">function</span> (obj) {</span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>                wasm <span class="op">=</span> obj<span class="op">;</span></span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>                wasm<span class="op">.</span><span class="at">instance</span><span class="op">.</span><span class="at">exports</span><span class="op">.</span><span class="fu">helloWorld</span>()<span class="op">;</span></span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>            })<span class="op">;</span></span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">body</span><span class="dt">&gt;</span></span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">html</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>Running the Application <code>python3 -m http.server</code>.</p>
+<p>Analyzing in the Browser <code>http://localhost:8000</code>.</p>
+<figure>
+<img src="webapp.png" alt="Result of the Web Application" />
+<figcaption aria-hidden="true">Result of the Web
+Application</figcaption>
+</figure>
+<figure>
+<img src="console_log.png" alt="Console Log" />
+<figcaption aria-hidden="true">Console Log</figcaption>
+</figure>
+<hr />
+<p>If you have more interest in the topic, I recommend consulting my
+older posts:</p>
+<ul>
+<li><a
+href="https://medium.com/webassembly/first-experiences-with-webassembly-dafb2cf2ab52">First
+Experiences with WebAssembly</a> provides an introduction and describes
+the toolkit for WebAssembly.</li>
+<li><a
+href="https://medium.com/webassembly/webassembly-module-146783e725d9">WebAssembly
+Module</a> explains the structure of the WebAssembly module.</li>
+<li><a
+href="https://medium.com/@marcokuoni/javascript-and-bytes-44a70871986">JavaScript
+and Bytes</a> demonstrates how to work with bytes in JavaScript
+(<code>ArrayBuffer</code>, <code>DataView</code>).</li>
+<li><a
+href="https://medium.com/webassembly/webassembly-memory-32bbe210112c">WebAssembly
+Memory</a> describes memory handling in WebAssembly.</li>
+<li><a
+href="https://medium.com/webassembly/simple-c-program-in-webassembly-1a7b148293c2">A
+Simple C Program in WebAssembly</a> details how a simple C program can
+be compiled as WebAssembly and used in a web application.</li>
+</ul>
+<hr />
+<h2 id="further-resources">Further Resources</h2>
+<ul>
+<li><a
+href="https://github.com/marcokuoni/public_doc/tree/main/essays/6_hello_world_cpp_programm">Source
+Code</a></li>
+<li><a
+href="https://github.com/marcokuoni/public_doc/tree/main/essays/6_hello_world_cpp_programm/README.de.md">Deutsche
+Version</a></li>
+</ul>
+<p>I am open to refining, expanding, or correcting the article. Feel
+free to provide a feedback or get in touch with me.</p>
+<p>Created by <a href="https://marcokuoni.ch">Marco Kuoni, September
+2023</a></p>
+</body>
+</html>

@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="de-CH" xml:lang="de-CH">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Marco Kuoni" />
+  <meta name="keywords" content="WebAssembly, wasi, javascript, Webdev, Webdeveloper, web, html, browser, webapp, webapplication, webapplications, programming, coding, software, technology" />
+  <title>Ein einfaches C Programm in WebAssembly</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    div.abstract {
+      margin: 2em 2em 2em 2em;
+      text-align: left;
+      font-size: 85%;
+    }
+    div.abstract-title {
+      font-weight: bold;
+      text-align: center;
+      padding: 0;
+      margin-bottom: 0.5em;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Ein einfaches C Programm in WebAssembly</h1>
+<p class="subtitle">Andere Sprachen können Vorteile in Bezug auf
+Leistung, Sicherheit, Einfachheit oder aufgrund vorhandenen Codes
+bieten.</p>
+<p class="author">Marco Kuoni</p>
+<p class="date">2023-09-10T00:00:00+0100</p>
+<div class="abstract">
+<div class="abstract-title">Zusammenfassung</div>
+<p>Andere Sprachen können Vorteile in Bezug auf Leistung, Sicherheit,
+Einfachheit oder aufgrund vorhandenen Codes bieten.</p>
+</div>
+</header>
+<h1 id="ein-einfaches-c-programm-in-webassembly">Ein einfaches C
+Programm in WebAssembly</h1>
+<p>JavaScript macht nicht für jeden Anwendungsfall immer Sinn. Andere
+Sprachen können Vorteile in Performance, Sicherheit oder Einfachheit
+bieten. Zudem können eventuell bereits existierende Programme in anderen
+Sprachen einfach genutzt werden.</p>
+<h2 id="multiplizieren-in-c">Multiplizieren in C</h2>
+<p>Wie schon in den vorherigen Artikel wird eine Multiplikationsfunktion
+als Beispiel verwendet.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> multiply<span class="op">(</span><span class="dt">int</span> a<span class="op">,</span> <span class="dt">int</span> b<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a <span class="op">*</span> b<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> a <span class="op">=</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> b <span class="op">=</span> <span class="dv">21</span><span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> result <span class="op">=</span> multiply<span class="op">(</span>a<span class="op">,</span> b<span class="op">);</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    printf<span class="op">(</span><span class="st">&quot;</span><span class="sc">%d</span><span class="st"> * </span><span class="sc">%d</span><span class="st"> = </span><span class="sc">%d\n</span><span class="st">&quot;</span><span class="op">,</span> a<span class="op">,</span> b<span class="op">,</span> result<span class="op">);</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<h2 id="kompilieren">Kompilieren</h2>
+<h3 id="für-das-hostsystem">Für das Hostsystem</h3>
+<p>Wenn man nur mit Programmiersprachen arbeitet, die direkt
+interpretiert werden, ist dieser Schritt nicht immer bekannt. Die
+Programmiersprache C muss zuerst in Maschinencode übersetzt werden,
+damit dieser ausgeführt werden kann. Hierzu gibt es diverse Compiler,
+welche dies übernehmen können. In diesem Beispiel verwenden wir den <a
+href="https://clang.llvm.org/get_started.html">Clang</a> <a
+href="https://llvm.org">LLVM Compiler</a>, für welchen es diverse
+Versionen für unterschiedliche Betriebssysteme giebt.</p>
+<p>Installieren unter Ubuntu <code>sudo apt install clang</code>.</p>
+<blockquote>
+<p>Auf Grund des Inputs von Frank Denis über Medium, erläutere ich einen
+alternativen Weg am Schluss des Artikels mit dem <a
+href="https://ziglang.org/">zig cc Compiler</a> als <a
+href="https://andrewkelley.me/post/zig-cc-powerful-drop-in-replacement-gcc-clang.html">Ersatz
+für Clang</a>. Der aber zum aktuellen Zeitpunkt noch nicht genau gleich
+verwendet werden kann und daher empfehle ich für diesen Artikel Clang zu
+verwenden.</p>
+</blockquote>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">```</span><span class="fu">bash</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> clang multiply.c</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> file a.out</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ex">a.out:</span> ELF 64-bit LSB pie executable, x86-64, version 1 <span class="er">(</span><span class="ex">SYSV</span><span class="kw">)</span><span class="ex">,</span> dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID<span class="pp">[</span><span class="ss">sha1</span><span class="pp">]</span>=882fbc40b313213c741a5fb85a55bed587acd699, for GNU/Linux 3.2.0, not stripped</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ./a.out</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="ex">2</span> <span class="pp">*</span> 21 = 42</span></code></pre></div>
+<blockquote>
+<p>Es ist zu beachten, dass der Compiler normalerweise für das
+Hostsystem kompiliert. Somit kann das Programm nur auf diesem Hostsystem
+ausgeführt werden.</p>
+</blockquote>
+<h3 id="assembly-code">Assembly Code</h3>
+<p>Wie es bei WebAssembly das WAT-Format gibt um die Maschinenbefehle
+für Menschen lesbar zu macht, gibt es auch für native Maschinenbefehle
+eine ähnliche Sprache. Diese wird als <a
+href="https://en.wikipedia.org/wiki/Assembly_language">Assembly Code</a>
+bezeichnet. Dieser Code kann mit einem Disassembler aus dem
+Maschinencode generiert werden oder wie hier direkt aus der höheren
+Sprache per LLVM.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> clang <span class="at">-S</span> multiply.c</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cat multiply.s</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.text</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.file</span>   <span class="st">&quot;multiply.c&quot;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.globl</span>  multiply                        <span class="co"># -- Begin function multiply</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.p2align</span>        4, 0x90</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.type</span>   multiply,@function</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="ex">multiply:</span>                               <span class="co"># @multiply</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.cfi_startproc</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co"># %bb.0:</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        <span class="ex">pushq</span>   %rbp</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.cfi_def_cfa_offset</span> 16</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.cfi_offset</span> %rbp, <span class="at">-16</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        <span class="ex">movq</span>    %rsp, %rbp</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.cfi_def_cfa_register</span> %rbp</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        <span class="ex">movl</span>    %edi, <span class="at">-4</span><span class="er">(</span><span class="ex">%rbp</span><span class="kw">)</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>        <span class="ex">movl</span>    %esi, <span class="at">-8</span><span class="er">(</span><span class="ex">%rbp</span><span class="kw">)</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>        <span class="ex">movl</span>    <span class="at">-4</span><span class="er">(</span><span class="ex">%rbp</span><span class="kw">)</span><span class="ex">,</span> %eax</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>        <span class="ex">imull</span>   <span class="at">-8</span><span class="er">(</span><span class="ex">%rbp</span><span class="kw">)</span><span class="ex">,</span> %eax</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>        <span class="ex">popq</span>    %rbp</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.cfi_def_cfa</span> %rsp, 8</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        <span class="ex">retq</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="ex">.Lfunc_end0:</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.size</span>   multiply, .Lfunc_end0-multiply</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.cfi_endproc</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>                                        <span class="co"># -- End function</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.globl</span>  main                            <span class="co"># -- Begin function main</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.p2align</span>        4, 0x90</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.type</span>   main,@function</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="ex">main:</span>                                   <span class="co"># @main</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.cfi_startproc</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="co"># %bb.0:</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>        <span class="ex">pushq</span>   %rbp</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.cfi_def_cfa_offset</span> 16</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.cfi_offset</span> %rbp, <span class="at">-16</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>        <span class="ex">movq</span>    %rsp, %rbp</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.cfi_def_cfa_register</span> %rbp</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>        <span class="ex">subq</span>    <span class="va">$1</span>6, %rsp</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>        <span class="ex">movl</span>    <span class="va">$0</span>, <span class="at">-4</span><span class="er">(</span><span class="ex">%rbp</span><span class="kw">)</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>        <span class="ex">movl</span>    <span class="va">$2</span>, <span class="at">-8</span><span class="er">(</span><span class="ex">%rbp</span><span class="kw">)</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>        <span class="ex">movl</span>    <span class="va">$2</span>1, <span class="at">-12</span><span class="er">(</span><span class="ex">%rbp</span><span class="kw">)</span></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>        <span class="ex">movl</span>    <span class="at">-8</span><span class="er">(</span><span class="ex">%rbp</span><span class="kw">)</span><span class="ex">,</span> %edi</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>        <span class="ex">movl</span>    <span class="at">-12</span><span class="er">(</span><span class="ex">%rbp</span><span class="kw">)</span><span class="ex">,</span> %esi</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>        <span class="ex">callq</span>   multiply</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>        <span class="ex">movl</span>    %eax, <span class="at">-16</span><span class="er">(</span><span class="ex">%rbp</span><span class="kw">)</span></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>        <span class="ex">movl</span>    <span class="at">-8</span><span class="er">(</span><span class="ex">%rbp</span><span class="kw">)</span><span class="ex">,</span> %esi</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>        <span class="ex">movl</span>    <span class="at">-12</span><span class="er">(</span><span class="ex">%rbp</span><span class="kw">)</span><span class="ex">,</span> %edx</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>        <span class="ex">movl</span>    <span class="at">-16</span><span class="er">(</span><span class="ex">%rbp</span><span class="kw">)</span><span class="ex">,</span> %ecx</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>        <span class="ex">leaq</span>    .L.str<span class="er">(</span><span class="ex">%rip</span><span class="kw">)</span><span class="ex">,</span> %rdi</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>        <span class="ex">movb</span>    <span class="va">$0</span>, %al</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>        <span class="ex">callq</span>   printf@PLT</span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>        <span class="ex">xorl</span>    %eax, %eax</span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>        <span class="ex">addq</span>    <span class="va">$1</span>6, %rsp</span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>        <span class="ex">popq</span>    %rbp</span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.cfi_def_cfa</span> %rsp, 8</span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>        <span class="ex">retq</span></span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a><span class="ex">.Lfunc_end1:</span></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.size</span>   main, .Lfunc_end1-main</span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.cfi_endproc</span></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>                                        <span class="co"># -- End function</span></span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.type</span>   .L.str,@object                  <span class="co"># @.str</span></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.section</span>        .rodata.str1.1,<span class="st">&quot;aMS&quot;</span>,@progbits,1</span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a><span class="ex">.L.str:</span></span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.asciz</span>  <span class="st">&quot;%d * %d = %d\n&quot;</span></span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.size</span>   .L.str, 14</span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.ident</span>  <span class="st">&quot;Ubuntu clang version 14.0.0-1ubuntu1.1&quot;</span></span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.section</span>        <span class="st">&quot;.note.GNU-stack&quot;</span>,<span class="st">&quot;&quot;</span>,@progbits</span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.addrsig</span></span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.addrsig_sym</span> multiply</span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>        <span class="ex">.addrsig_sym</span> printf</span></code></pre></div>
+<h3 id="llvm">LLVM</h3>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/LLVM">Wikipedia
+English</a></li>
+<li><a href="https://de.m.wikipedia.org/wiki/LLVM">Wikipedia
+Deutsch</a></li>
+</ul>
+<p>Die Idee hinter LLVM (früher Low Level Virtual Machine) ist ähnlich
+wie die von WebAssembly aufgebaut. Verschiedene Frontends für
+unterschiedliche höhere Sprachen übersetzen in eine
+LLVM-Zwischensprache. Diese Zwischensprache wird dann auf einer
+virtuellen Maschine ausgeführt und analysiert beziehungsweise optimiert.
+Zum Schluss kann dann von verschiedenen Backends in konkrete
+Maschinencodes übersetzt werden.</p>
+<p><img src="llvm_compiler.jpg" alt="LLVM Compiler" /> Bild von <a
+href="https://blog.gopheracademy.com/advent-2018/llvm-ir-and-go/">Gopher
+Academy Blog</a></p>
+<p>Dies kann nun genutzt werden um mit einem WebAssembly Backend mit
+LLVM WebAssembly Code zu generieren.</p>
+<p>Installieren unter Ubuntu <code>sudo apt install llvm</code>,
+<code>sudo apt install lld</code>.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> llc <span class="at">--version</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Ubuntu</span> LLVM version 14.0.0</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="ex">Optimized</span> build.</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="ex">Default</span> target: x86_64-pc-linux-gnu</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="ex">Host</span> CPU: skylake</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="ex">Registered</span> Targets:</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="ex">aarch64</span>    <span class="at">-</span> AArch64 <span class="er">(</span><span class="ex">little</span> endian<span class="kw">)</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="ex">aarch64_32</span> <span class="at">-</span> AArch64 <span class="er">(</span><span class="ex">little</span> endian ILP32<span class="kw">)</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="ex">aarch64_be</span> <span class="at">-</span> AArch64 <span class="er">(</span><span class="ex">big</span> endian<span class="kw">)</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="ex">amdgcn</span>     <span class="at">-</span> AMD GCN GPUs</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="ex">arm</span>        <span class="at">-</span> ARM</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="ex">arm64</span>      <span class="at">-</span> ARM64 <span class="er">(</span><span class="ex">little</span> endian<span class="kw">)</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="ex">arm64_32</span>   <span class="at">-</span> ARM64 <span class="er">(</span><span class="ex">little</span> endian ILP32<span class="kw">)</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="ex">armeb</span>      <span class="at">-</span> ARM <span class="er">(</span><span class="ex">big</span> endian<span class="kw">)</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="ex">avr</span>        <span class="at">-</span> Atmel AVR Microcontroller</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="ex">bpf</span>        <span class="at">-</span> BPF <span class="er">(</span><span class="ex">host</span> endian<span class="kw">)</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="ex">bpfeb</span>      <span class="at">-</span> BPF <span class="er">(</span><span class="ex">big</span> endian<span class="kw">)</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    <span class="ex">bpfel</span>      <span class="at">-</span> BPF <span class="er">(</span><span class="ex">little</span> endian<span class="kw">)</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="ex">hexagon</span>    <span class="at">-</span> Hexagon</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="ex">lanai</span>      <span class="at">-</span> Lanai</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    <span class="ex">m68k</span>       <span class="at">-</span> Motorola 68000 family</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    <span class="ex">mips</span>       <span class="at">-</span> MIPS <span class="er">(</span><span class="ex">32-bit</span> big endian<span class="kw">)</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    <span class="ex">mips64</span>     <span class="at">-</span> MIPS <span class="er">(</span><span class="ex">64-bit</span> big endian<span class="kw">)</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    <span class="ex">mips64el</span>   <span class="at">-</span> MIPS <span class="er">(</span><span class="ex">64-bit</span> little endian<span class="kw">)</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    <span class="ex">mipsel</span>     <span class="at">-</span> MIPS <span class="er">(</span><span class="ex">32-bit</span> little endian<span class="kw">)</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>    <span class="ex">msp430</span>     <span class="at">-</span> MSP430 <span class="pp">[</span><span class="ss">experimental</span><span class="pp">]</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    <span class="ex">nvptx</span>      <span class="at">-</span> NVIDIA PTX 32-bit</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    <span class="ex">nvptx64</span>    <span class="at">-</span> NVIDIA PTX 64-bit</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>    <span class="ex">ppc32</span>      <span class="at">-</span> PowerPC 32</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>    <span class="ex">ppc32le</span>    <span class="at">-</span> PowerPC 32 LE</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>    <span class="ex">ppc64</span>      <span class="at">-</span> PowerPC 64</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>    <span class="ex">ppc64le</span>    <span class="at">-</span> PowerPC 64 LE</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>    <span class="ex">r600</span>       <span class="at">-</span> AMD GPUs HD2XXX-HD6XXX</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>    <span class="ex">riscv32</span>    <span class="at">-</span> 32-bit RISC-V</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    <span class="ex">riscv64</span>    <span class="at">-</span> 64-bit RISC-V</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>    <span class="ex">sparc</span>      <span class="at">-</span> Sparc</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>    <span class="ex">sparcel</span>    <span class="at">-</span> Sparc LE</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>    <span class="ex">sparcv9</span>    <span class="at">-</span> Sparc V9</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>    <span class="ex">systemz</span>    <span class="at">-</span> SystemZ</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>    <span class="ex">thumb</span>      <span class="at">-</span> Thumb</span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>    <span class="ex">thumbeb</span>    <span class="at">-</span> Thumb <span class="er">(</span><span class="ex">big</span> endian<span class="kw">)</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>    <span class="ex">ve</span>         <span class="at">-</span> VE</span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>    <span class="ex">wasm32</span>     <span class="at">-</span> WebAssembly 32-bit</span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>    <span class="ex">wasm64</span>     <span class="at">-</span> WebAssembly 64-bit</span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>    <span class="ex">x86</span>        <span class="at">-</span> 32-bit X86: Pentium-Pro and above</span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>    <span class="ex">x86-64</span>     <span class="at">-</span> 64-bit X86: EM64T and AMD64</span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>    <span class="ex">xcore</span>      <span class="at">-</span> XCore</span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> wasm-ld <span class="at">--version</span></span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a><span class="ex">Ubuntu</span> LLD 14.0.0</span></code></pre></div>
+<h3 id="für-webassembly">Für WebAssembly</h3>
+<p>Das einleitende Beispiel wird nun vereinfacht, damit die
+Multiplikationsfunktion direkt exportiert und in der Webanwendung
+verwendet werden kann.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> multiply<span class="op">(</span><span class="dt">int</span> a<span class="op">,</span> <span class="dt">int</span> b<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a <span class="op">*</span> b<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Kompilieren
+<code>clang --target=wasm32 -nostdlib -Wl,--no-entry -Wl,--export-all simple_multiply.c -o multiply.wasm</code>.</p>
+<p>Erklärung zu den verwendeten Optionen: * <code>--target=wasm32</code>
+gibt an, dass für 32-Bit WebAssembly kompiliert werden soll. *
+<code>-nostdlib</code> gibt an, dass keine C-Standardbibliothek
+verwendet werden soll. * <code>-Wl,--no-entry</code> gibt an, dass keine
+<code>main</code> Funktion vorhanden ist. *
+<code>-Wl,--export-all</code> gibt an, dass alle Funktionen exportiert
+werden sollen. * <code>-o multiply.wasm</code> gibt an, dass die Ausgabe
+in die <code>multiply.wasm</code> Datei geschrieben werden soll.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> file multiply.wasm</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">multiply.wasm:</span> WebAssembly <span class="er">(</span><span class="ex">wasm</span><span class="kw">)</span> <span class="ex">binary</span> module version 0x1 <span class="er">(</span><span class="ex">MVP</span><span class="kw">)</span></span></code></pre></div>
+<p>Analysieren <code>wasm-objdump -x multiply.wasm</code>.</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> wasm-objdump <span class="at">-x</span> multiply.wasm</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">multiply.wasm:</span>  file format wasm 0x1</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="ex">Section</span> Details:</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="va">Type</span><span class="op">[</span><span class="dv">2</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="er">(</span><span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> nil</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i32</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="va">Function</span><span class="op">[</span><span class="dv">2</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> sig=0 <span class="op">&lt;</span>__wasm_call_ctors<span class="op">&gt;</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> sig=1 <span class="op">&lt;</span>multiply<span class="op">&gt;</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="va">Memory</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> memory<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> pages: initial=2</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="va">Global</span><span class="op">[</span><span class="dv">7</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> i32 mutable=1 <span class="op">&lt;</span>__stack_pointer<span class="op">&gt;</span> - init i32=66560</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> i32 mutable=0 <span class="op">&lt;</span>__dso_handle<span class="op">&gt;</span> - init i32=1024</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> i32 mutable=0 <span class="op">&lt;</span>__data_end<span class="op">&gt;</span> - init i32=1024</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">3</span><span class="pp">]</span> i32 mutable=0 <span class="op">&lt;</span>__global_base<span class="op">&gt;</span> - init i32=1024</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">4</span><span class="pp">]</span> i32 mutable=0 <span class="op">&lt;</span>__heap_base<span class="op">&gt;</span> - init i32=66560</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">5</span><span class="pp">]</span> i32 mutable=0 <span class="op">&lt;</span>__memory_base<span class="op">&gt;</span> - init i32=0</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">6</span><span class="pp">]</span> i32 mutable=0 <span class="op">&lt;</span>__table_base<span class="op">&gt;</span> - init i32=1</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="va">Export</span><span class="op">[</span><span class="dv">9</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> memory<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="at">-</span><span class="op">&gt;</span> <span class="st">&quot;memory&quot;</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="op">&lt;</span>__wasm_call_ctors<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;__wasm_call_ctors&quot;</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> <span class="op">&lt;</span>multiply<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;multiply&quot;</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> <span class="at">-</span><span class="op">&gt;</span> <span class="st">&quot;__dso_handle&quot;</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> <span class="at">-</span><span class="op">&gt;</span> <span class="st">&quot;__data_end&quot;</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">3</span><span class="pp">]</span> <span class="at">-</span><span class="op">&gt;</span> <span class="st">&quot;__global_base&quot;</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">4</span><span class="pp">]</span> <span class="at">-</span><span class="op">&gt;</span> <span class="st">&quot;__heap_base&quot;</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">5</span><span class="pp">]</span> <span class="at">-</span><span class="op">&gt;</span> <span class="st">&quot;__memory_base&quot;</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">6</span><span class="pp">]</span> <span class="at">-</span><span class="op">&gt;</span> <span class="st">&quot;__table_base&quot;</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a><span class="va">Code</span><span class="op">[</span><span class="dv">2</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> size=2 <span class="op">&lt;</span>__wasm_call_ctors<span class="op">&gt;</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> size=61 <span class="op">&lt;</span>multiply<span class="op">&gt;</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a><span class="ex">Custom:</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> name: <span class="st">&quot;name&quot;</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="op">&lt;</span>__wasm_call_ctors<span class="op">&gt;</span></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> <span class="op">&lt;</span>multiply<span class="op">&gt;</span></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="op">&lt;</span>__stack_pointer<span class="op">&gt;</span></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a><span class="ex">Custom:</span></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> name: <span class="st">&quot;producers&quot;</span></span></code></pre></div>
+<p>Die Details zu den einzelnen Sektionen sind in der <a
+href="https://webassembly.github.io/spec/core/binary/modules.html#sections">WebAssembly
+Spezifikation</a> beschrieben und werden hier nicht weiter erläutert.
+Man bemerke die Zeile
+<code>func[1] &lt;multiply&gt; -&gt; "multiply"</code> im Abschnitt
+<code>Export[9]</code>. Was uns ermöglicht die Funktion
+<code>multiply</code> in der Webanwendung aufzurufen.</p>
+<h4 id="gebrauch-in-einer-webanwendung">Gebrauch in einer
+Webanwendung</h4>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;!DOCTYPE</span> html<span class="dt">&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">html</span><span class="ot"> lang</span><span class="op">=</span><span class="st">&quot;en&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">head</span><span class="dt">&gt;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> charset</span><span class="op">=</span><span class="st">&quot;utf-8&quot;</span><span class="ot"> </span><span class="dt">/&gt;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">title</span><span class="dt">&gt;</span>Simple C Program in WebAssembly<span class="dt">&lt;/</span><span class="kw">title</span><span class="dt">&gt;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">head</span><span class="dt">&gt;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span><span class="dt">&gt;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;a&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;3&quot;</span><span class="ot"> </span><span class="dt">/&gt;</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;b&quot;</span><span class="ot"> value </span><span class="op">=</span><span class="st">&quot;14&quot;</span><span class="ot"> </span><span class="dt">/&gt;</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="dt">&gt;</span>Multiply<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&lt;</span><span class="kw">output</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;output&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        <span class="kw">function</span> <span class="fu">fetchAndInstantiate</span>(url<span class="op">,</span> importObject) {</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="fu">fetch</span>(url)</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>                <span class="op">.</span><span class="fu">then</span>(response <span class="kw">=&gt;</span> response<span class="op">.</span><span class="fu">arrayBuffer</span>())</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>                <span class="op">.</span><span class="fu">then</span>(bytes <span class="kw">=&gt;</span> WebAssembly<span class="op">.</span><span class="fu">instantiate</span>(bytes<span class="op">,</span> importObject))</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>                <span class="op">.</span><span class="fu">then</span>(results <span class="kw">=&gt;</span> results<span class="op">.</span><span class="at">instance</span>)<span class="op">;</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>        <span class="bu">document</span><span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;DOMContentLoaded&#39;</span><span class="op">,</span> <span class="kw">function</span> () {</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>            <span class="kw">const</span> form <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">querySelector</span>(<span class="st">&#39;form&#39;</span>)<span class="op">;</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>            form<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;submit&#39;</span><span class="op">,</span> <span class="kw">function</span> (<span class="bu">event</span>) {</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>                <span class="bu">event</span><span class="op">.</span><span class="fu">preventDefault</span>()<span class="op">;</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>                <span class="kw">const</span> formData <span class="op">=</span> <span class="kw">new</span> <span class="bu">FormData</span>(form)<span class="op">;</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>                <span class="kw">const</span> a <span class="op">=</span> formData<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;a&#39;</span>)<span class="op">;</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>                <span class="kw">const</span> b <span class="op">=</span> formData<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;b&#39;</span>)<span class="op">;</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>                <span class="fu">fetchAndInstantiate</span>(<span class="st">&#39;multiply.wasm&#39;</span>)</span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>                    <span class="op">.</span><span class="fu">then</span>(instance <span class="kw">=&gt;</span> {</span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">const</span> result <span class="op">=</span> instance<span class="op">.</span><span class="at">exports</span><span class="op">.</span><span class="fu">multiply</span>(a<span class="op">,</span> b)<span class="op">;</span></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>                        form<span class="op">.</span><span class="at">output</span><span class="op">.</span><span class="at">value</span> <span class="op">=</span> result<span class="op">;</span></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>                    })<span class="op">;</span></span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>            })<span class="op">;</span></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>        })<span class="op">;</span></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">body</span><span class="dt">&gt;</span></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">html</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>Anwendung starten <code>python3 -m http.server</code>.</p>
+<p>Analysieren im Browser <code>http://localhost:8000</code>.</p>
+<figure>
+<img src="webapplication.png" alt="Resultat der Webanwendung" />
+<figcaption aria-hidden="true">Resultat der Webanwendung</figcaption>
+</figure>
+<h2 id="alternativer-weg-mit-zig-cc-compiler">Alternativer Weg mit Zig
+CC Compiler</h2>
+<p>Der <a href="https://ziglang.org/">zig cc Compiler</a> ist ein
+Drop-In Ersatz für Clang und GCC und besitzt noch keinen stabilen
+Release. Er ist in der <a
+href="https://de.wikipedia.org/wiki/Zig_(Programmiersprache)">Zig
+Programmiersprache geschrieben</a>. Ein Vorteil gegenüber Clang ist,
+dass er direkt mit SourceCode ausgeliefert wird und dieser erst bei
+Gebrauch für das Hostsystem gebuildet wird. Clang funktioniert auch auf
+allen gängigen Plattformen, jedoch wird man eventuell nicht immer die
+neueste Version für sein Betriebssystem kompiliert bekommen und die
+Optionen können unter Umständen anders benannt sein. Vielleicht für die
+Befehle im Artikel müssen clang, llvm oder der Linker (lld) ein Update
+erhalten damit die Befehle korrekt funktionieren.</p>
+<p>Installieren unter Ubuntu
+<code>snap install zig --classic --beta</code> (0.11.0), für on the edge
+<code>snap install zig --classic --edge</code> (0.12.0-dev) oder selbst
+kompilieren. Die Details findet man hier <a
+href="https://ziglang.org/download/">ziglang.org/download</a>.</p>
+<ul>
+<li>Um das C-Progamm mit ZIG für das Hostsystem zu kompilieren
+<code>zig cc multiply.c</code>.</li>
+<li>Assembly Code generieren <code>zig cc -S multiply.c</code>.</li>
+</ul>
+<p>Beim Kompilieren für die Webanwendung gibt es leider noch Probleme.
+Gemäss Dokumentation müsste
+<code>zig cc simple_multiply.c -target wasm32-freestanding -nostdlib -shared -rdynamic -o multiply.wasm</code>
+gleich funktionieren wie
+<code>clang simple_multiply.c --target=wasm32 -nostdlib -Wl,--no-entry -Wl,--export-all -o multiply.wasm</code>.
+Dabei steht <code>-shared</code> für keine main Funktion
+<code>-Wl,--no-entry</code> und <code>-rdynamic</code> für alle
+Funktionen exportieren <code>Wl,--export-all</code>. Leider funktioniert
+dies aber nicht und die <code>multiply</code> Funktion wird nicht
+exportiert. Ich denke aber, da zig cc noch in der Entwicklung ist, wird
+dies in Zukunft funktionieren.</p>
+<p>Eine mögliche Lösung mit dem ZIG CC wäre in zwei Schritten zu
+kompilieren
+<code>zig cc simple_multiply.c -c -target wasm32-freestanding -nostdlib -o multiply.o</code>.
+Wobei <code>-c</code> in eine Objekt-Datei kompiliert ohne diese zu
+linken. Welche dann mit dem <a
+href="https://lld.llvm.org/WebAssembly.html">WebAssembly Linker</a> in
+ein ausführbares WebAssembly gemäss unseren Anwendungsfall übersetzt
+werden kann
+<code>wasm-ld multiply.o --no-entry --export-all -o multiply.wasm</code></p>
+<p>Den Linker unter Ubuntu installieren
+<code>sudo apt install lld</code>.</p>
+<p>Oder man wählt einen expliziten export, welcher dann auch mit dem ZIG
+CC direkt funktioniert
+<code>zig cc simple_multiply.c -target wasm32-freestanding -nostdlib -shared -Wl,--export=multiply -o multiply.wasm</code>.</p>
+<hr />
+<p>Falls diese Webanwendung neu war oder noch mehr Interesse am Thema
+besteht, empfehle ich meine älteren Beiträge zu konsultieren: * <a
+href="https://medium.com/webassembly/first-experiences-with-webassembly-dafb2cf2ab52">Erste
+Erfahrungen mit WebAssembly</a> gibt eine Einführung und beschreibt den
+Werkzeugkasten für WebAssembly. * <a
+href="https://medium.com/webassembly/webassembly-module-146783e725d9">WebAssebmly
+Module</a> erklärt den Aufbau des WebAssembly Moduls. * <a
+href="https://medium.com/@marcokuoni/javascript-and-bytes-44a70871986">JavaScript
+und Bytes</a> zeigt wie man in JavaScript mit Bytes arbeiten kann
+(<code>ArrayBuffer</code>, <code>DataView</code>). * <a
+href="https://medium.com/webassembly/webassembly-memory-32bbe210112c">WebAssembly
+Memory</a> beschreibt den Umgang mit dem Speicher in WebAssembly.</p>
+<hr />
+<h2 id="weiterführend">Weiterführend</h2>
+<ul>
+<li><a
+href="https://github.com/marcokuoni/public_doc/tree/main/essays/5_simple_c_programm_in_webassembly">Source
+Code</a></li>
+<li><a
+href="https://github.com/marcokuoni/public_doc/tree/main/essays/5_simple_c_programm_in_webassembly/README.md">English
+Version</a></li>
+</ul>
+<p>Ich bin gerne bereit den Beitrag noch zu präzisieren, erweitern oder
+zu korrigieren. Schreibt ein Feedback oder meldet euch direkt bei
+mir.</p>
+<p>Erstellt von <a href="https://marcokuoni.ch">Marco Kuoni, September
+2023</a></p>
+</body>
+</html>

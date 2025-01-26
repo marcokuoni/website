@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Marco Kuoni" />
+  <meta name="keywords" content="WebAssembly, wasi, javascript, Webdev, Webdeveloper, web, html, browser, webapp, webapplication, webapplications, programming, coding, software, technology" />
+  <title>WebAssembly Module</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    div.abstract {
+      margin: 2em 2em 2em 2em;
+      text-align: left;
+      font-size: 85%;
+    }
+    div.abstract-title {
+      font-weight: bold;
+      text-align: center;
+      padding: 0;
+      margin-bottom: 0.5em;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">WebAssembly Module</h1>
+<p class="subtitle">WebAssembly programs are organized into modules,
+which represent the unit for publishing, loading, and compilation. A
+module gathers definitions for types, functions, tables, memory, and
+global variables. Furthermore, it can declare imports and exports,
+provide initializations for data and element segments, or a startup
+function.</p>
+<p class="author">Marco Kuoni</p>
+<p class="date">2023-08-23T00:00:00+0100</p>
+<div class="abstract">
+<div class="abstract-title">Abstract</div>
+<p>WebAssembly programs are organized into modules, which represent the
+unit for publishing, loading, and compilation. A module gathers
+definitions for types, functions, tables, memory, and global variables.
+Furthermore, it can declare imports and exports, provide initializations
+for data and element segments, or a startup function.</p>
+</div>
+</header>
+<h1 id="webassembly-module">WebAssembly Module</h1>
+<p>WebAssembly programs are organized into modules, which represent the
+unit for publishing, loading, and compilation. A module gathers
+definitions for types, functions, tables, memory, and global variables.
+Furthermore, it can declare imports and exports, provide initializations
+for data and element segments, or a startup function.</p>
+<p>Structure of the Article: 1. Theory 2. Analysis 3. Practice</p>
+<h2 id="theory-module-structure">Theory: Module Structure</h2>
+<ul>
+<li><a
+href="https://webassembly.github.io/spec/core/binary/modules.html">WebAssembly
+Module Sections</a></li>
+</ul>
+<p>File formats are often identified using a so-called “magic number”.
+In WebAssembly, this number is <code>0x6d736100</code>
+(“<code>\\0asm</code>” in ASCII), followed by the version number
+<code>0x00000001</code>.</p>
+<p>After the identification, various module sections follow. Each
+section begins with a byte that defines the section type. Subsequently,
+the section’s length in bytes is encoded as <a
+href="https://en.wikipedia.org/wiki/LEB128">Leb128</a>, followed by the
+content of the section.</p>
+<table>
+<colgroup>
+<col style="width: 2%" />
+<col style="width: 7%" />
+<col style="width: 90%" />
+</colgroup>
+<thead>
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Custom</td>
+<td>Custom section defined to be used for debugging, metadata or
+third-party extension. It is ignored by WebAssembly semantics</td>
+</tr>
+<tr>
+<td>1</td>
+<td>Type</td>
+<td>Defines all function types in the module</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Import</td>
+<td>Imports functions, global variables, tables, and memory into the
+module</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Function</td>
+<td>Defines all function signatures in the module (referencing other
+sections)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Table</td>
+<td>Defines all <a
+href="https://webassembly.github.io/spec/core/syntax/modules.html#tables">tables</a>
+in the module</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Memory</td>
+<td>Defines all <a
+href="https://webassembly.github.io/spec/core/syntax/modules.html#memories">memories</a>
+in the module</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Global</td>
+<td>Defines all <a
+href="https://webassembly.github.io/spec/core/syntax/modules.html#globals">globals</a>
+in the module</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Export</td>
+<td>Exports functions, global variables, tables, and memory from the
+module</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Start</td>
+<td>An optional startup function in the module. Executed during module
+initialization, after tables and memory are initialized. The module
+itself and its exports are usable from the outside after this is
+executed.</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Element</td>
+<td>Defines <a
+href="https://webassembly.github.io/spec/core/syntax/modules.html#syntax-elem">elements</a>
+in the module. Tables are not initialized by default; subranges of
+tables can be initialized using vectors of static elements.</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Code</td>
+<td>Defines functions body/code in the module</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Data</td>
+<td>Defines <a
+href="https://webassembly.github.io/spec/core/syntax/modules.html#syntax-data">data</a>
+in the module. Memory is initialized with 0x00 by default; subranges of
+memory can be initialized using vectors of static bytes.</td>
+</tr>
+<tr>
+<td>12</td>
+<td>Data Count</td>
+<td>Number of data segments in the module (optional)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="analysis">Analysis</h2>
+<p>Example of a WebAssembly module:</p>
+<pre class="wat"><code>(module
+  (func $alert (import &quot;imports&quot; &quot;alert_func&quot;) (param i32))
+
+  (func $multiply (param $a i32) (param $b i32) (result i32)
+    local.get $a
+    local.get $b
+    i32.mul
+  )
+
+  (func $alert_multiply (param $a i32) (param $b i32)
+    local.get $a
+    local.get $b
+    call $multiply
+    call $alert
+  )
+
+  (export &quot;multiply&quot; (func $multiply))
+  (export &quot;alert_multiply&quot; (func $alert_multiply))
+)</code></pre>
+<p>This is translated into WASM along with debugging information using
+the following command:
+<code>wat2wasm multiply.wat -o multiply.wasm --debug-names</code>.</p>
+<p>The result can now be analyzed using the following command:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> wasm-objdump <span class="at">-x</span> multiply.wasm</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">multiply.wasm:</span>  file format wasm 0x1</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">Section</span> Details:</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="va">Type</span><span class="op">[</span><span class="dv">3</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32</span><span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> nil</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i32</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> nil</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="va">Import</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> sig=0 <span class="op">&lt;</span>alert<span class="op">&gt;</span> <span class="op">&lt;</span>- imports.alert_func</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="va">Function</span><span class="op">[</span><span class="dv">2</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> sig=1 <span class="op">&lt;</span>multiply<span class="op">&gt;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> sig=2 <span class="op">&lt;</span>alert_multiply<span class="op">&gt;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="va">Export</span><span class="op">[</span><span class="dv">2</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> <span class="op">&lt;</span>multiply<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;multiply&quot;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> <span class="op">&lt;</span>alert_multiply<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;alert_multiply&quot;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="va">Code</span><span class="op">[</span><span class="dv">2</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> size=7 <span class="op">&lt;</span>multiply<span class="op">&gt;</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> size=10 <span class="op">&lt;</span>alert_multiply<span class="op">&gt;</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="ex">Custom:</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> name: <span class="st">&quot;name&quot;</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="op">&lt;</span>alert<span class="op">&gt;</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> <span class="op">&lt;</span>multiply<span class="op">&gt;</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> <span class="op">&lt;</span>alert_multiply<span class="op">&gt;</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> local<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="op">&lt;</span>a<span class="op">&gt;</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> local<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> <span class="op">&lt;</span>b<span class="op">&gt;</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> local<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="op">&lt;</span>a<span class="op">&gt;</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> local<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> <span class="op">&lt;</span>b<span class="op">&gt;</span></span></code></pre></div>
+<p>Alternatively, you can visualize the module in a <a
+href="https://wasdk.github.io/wasmcodeexplorer/">WebAssembly Code
+Explorer</a>.</p>
+<p><img src="webassembly_code_explorer.png"
+alt="WebAssembly Code Explorer" /> &gt; The color markings and
+interactions with the bytes can help you identify the different
+sections.</p>
+<h2 id="practice">Practice</h2>
+<p>Now we’ll use the same module in a web application. We will import
+the JavaScript API function <code>window.alert</code> into the module
+and call the exported function <code>alert_multiply</code>.</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;!DOCTYPE</span> html<span class="dt">&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">html</span><span class="ot"> lang</span><span class="op">=</span><span class="st">&quot;en&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">head</span><span class="dt">&gt;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> charset</span><span class="op">=</span><span class="st">&quot;utf-8&quot;</span><span class="ot"> </span><span class="dt">/&gt;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">title</span><span class="dt">&gt;</span>WebAssembly Module<span class="dt">&lt;/</span><span class="kw">title</span><span class="dt">&gt;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">head</span><span class="dt">&gt;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span><span class="dt">&gt;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;a&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;3&quot;</span><span class="ot"> </span><span class="dt">/&gt;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;b&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;14&quot;</span><span class="ot"> </span><span class="dt">/&gt;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="dt">&gt;</span>Multiply<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&lt;</span><span class="kw">output</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;output&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        <span class="kw">function</span> <span class="fu">fetchAndInstantiate</span>(url<span class="op">,</span> importObject) {</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="fu">fetch</span>(url)</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>                <span class="op">.</span><span class="fu">then</span>(response <span class="kw">=&gt;</span> response<span class="op">.</span><span class="fu">arrayBuffer</span>())</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>                <span class="op">.</span><span class="fu">then</span>(bytes <span class="kw">=&gt;</span> WebAssembly<span class="op">.</span><span class="fu">instantiate</span>(bytes<span class="op">,</span> importObject))</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>                <span class="op">.</span><span class="fu">then</span>(results <span class="kw">=&gt;</span> results<span class="op">.</span><span class="at">instance</span>)<span class="op">;</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>        <span class="bu">document</span><span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;DOMContentLoaded&#39;</span><span class="op">,</span> <span class="kw">function</span> () {</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>            <span class="kw">const</span> form <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">querySelector</span>(<span class="st">&#39;form&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>            <span class="co">// --&gt; Extension 1</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>            WebAssembly<span class="op">.</span><span class="fu">compileStreaming</span>(<span class="fu">fetch</span>(<span class="st">&#39;multiply.wasm&#39;</span>))</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>                <span class="op">.</span><span class="fu">then</span>(module <span class="kw">=&gt;</span> {</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>                    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(WebAssembly<span class="op">.</span><span class="at">Module</span><span class="op">.</span><span class="fu">exports</span>(module))<span class="op">;</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>                    <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(WebAssembly<span class="op">.</span><span class="at">Module</span><span class="op">.</span><span class="fu">imports</span>(module))<span class="op">;</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>                })<span class="op">;</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>            <span class="co">// &lt;-- Extension 1</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>            form<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;submit&#39;</span><span class="op">,</span> <span class="kw">function</span> (<span class="bu">event</span>) {</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>                <span class="bu">event</span><span class="op">.</span><span class="fu">preventDefault</span>()<span class="op">;</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>                <span class="kw">const</span> formData <span class="op">=</span> <span class="kw">new</span> <span class="bu">FormData</span>(form)<span class="op">;</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>                <span class="kw">const</span> a <span class="op">=</span> formData<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;a&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>                <span class="kw">const</span> b <span class="op">=</span> formData<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;b&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>                <span class="kw">const</span> importObject <span class="op">=</span> {</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>                    <span class="dt">imports</span><span class="op">:</span> {</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>                        <span class="dt">alert_func</span><span class="op">:</span> <span class="kw">function</span> (arg) {</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>                            <span class="bu">window</span><span class="op">.</span><span class="fu">alert</span>(arg)<span class="op">;</span></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>                        }</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>                    }</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>                }<span class="op">;</span></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>                <span class="fu">fetchAndInstantiate</span>(<span class="st">&#39;multiply.wasm&#39;</span><span class="op">,</span> importObject)</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>                    <span class="op">.</span><span class="fu">then</span>(instance <span class="kw">=&gt;</span> {</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>                        instance<span class="op">.</span><span class="at">exports</span><span class="op">.</span><span class="fu">alert_multiply</span>(a<span class="op">,</span> b)<span class="op">;</span></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>                    })<span class="op">;</span></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>                <span class="co">// --&gt; Extension 2</span></span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>                (<span class="kw">async</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">const</span> fetchPromise <span class="op">=</span> <span class="fu">fetch</span>(<span class="st">&#39;multiply.wasm&#39;</span>)<span class="op">;</span></span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">const</span> { instance } <span class="op">=</span> <span class="cf">await</span> WebAssembly<span class="op">.</span><span class="fu">instantiateStreaming</span>(fetchPromise<span class="op">,</span> importObject)<span class="op">;</span></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">const</span> result <span class="op">=</span> instance<span class="op">.</span><span class="at">exports</span><span class="op">.</span><span class="fu">multiply</span>(a<span class="op">,</span> b)<span class="op">;</span></span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>                    form<span class="op">.</span><span class="at">output</span><span class="op">.</span><span class="at">value</span> <span class="op">=</span> result<span class="op">;</span></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>                })()<span class="op">;</span></span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>                <span class="co">// &lt;-- Extension 2</span></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>            })<span class="op">;</span></span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>        })<span class="op">;</span></span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">body</span><span class="dt">&gt;</span></span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">html</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>To test the application, you can use the command
+<code>python3 -m http.server</code>. This will allow you to access the
+example by opening your browser and navigating to
+<code>http://localhost:8000</code>.</p>
+<figure>
+<img src="website.png" alt="Screenshot of the application" />
+<figcaption aria-hidden="true">Screenshot of the
+application</figcaption>
+</figure>
+<blockquote>
+<p>It’s important to note that the host program must provide the
+necessary functions to the WebAssembly module to been able to interact
+with the outer world. The same applies to memory areas used by the
+module.</p>
+</blockquote>
+<h3 id="extension-1">Extension 1</h3>
+<p>To see what a WebAssembly module imports and exports, you can use the
+JavaScript API to output this information.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>WebAssembly<span class="op">.</span><span class="fu">compileStreaming</span>(<span class="fu">fetch</span>(<span class="st">&#39;multiply.wasm&#39;</span>))</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">then</span>(module <span class="kw">=&gt;</span> {</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(WebAssembly<span class="op">.</span><span class="at">Module</span><span class="op">.</span><span class="fu">exports</span>(module))<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        <span class="bu">console</span><span class="op">.</span><span class="fu">log</span>(WebAssembly<span class="op">.</span><span class="at">Module</span><span class="op">.</span><span class="fu">imports</span>(module))<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span></code></pre></div>
+<figure>
+<img src="webassembly_import_export.png"
+alt="Console log of Import/Export" />
+<figcaption aria-hidden="true">Console log of Import/Export</figcaption>
+</figure>
+<h3 id="extension-2">Extension 2</h3>
+<p>Using the ArrayBuffer approach is not the most efficient way to work
+with WebAssembly. This method requires loading all the data over the
+network before we can compile it. While this might be a viable approach
+for smaller modules, a better solution is available through
+streaming.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>(<span class="kw">async</span> () <span class="kw">=&gt;</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> fetchPromise <span class="op">=</span> <span class="fu">fetch</span>(<span class="st">&#39;multiply.wasm&#39;</span>)<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> { instance } <span class="op">=</span> <span class="cf">await</span> WebAssembly<span class="op">.</span><span class="fu">instantiateStreaming</span>(fetchPromise<span class="op">,</span> importObject)<span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> result <span class="op">=</span> instance<span class="op">.</span><span class="at">exports</span><span class="op">.</span><span class="fu">multiply</span>(a<span class="op">,</span> b)<span class="op">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    form<span class="op">.</span><span class="at">output</span><span class="op">.</span><span class="at">value</span> <span class="op">=</span> result<span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>})()<span class="op">;</span></span></code></pre></div>
+<p>This way, the code is validated and ready for execution as soon as
+it’s downloaded. Unfortunately, there isn’t a standardized way to cache
+WebAssembly modules at the moment. However, implementing such caching
+mechanisms in the future will further improve startup times and prevent
+unnecessary repeated downloads.</p>
+<p>Additionally, it’s worth mentioning an ongoing proposal for
+ECMAScript module integration, which aims to enhance the integration of
+WebAssembly modules into JavaScript applications.</p>
+<ul>
+<li>Proposal: <a
+href="https://webassembly.github.io/esm-integration/js-api/index.html#esm-integration">ECMAScript
+Module Integration</a></li>
+<li>Lin Clark’s presentation: <a
+href="https://www.youtube.com/watch?v=qR_b5gajwug&amp;themeRefresh=1">WebAssembly
+ES module integration</a></li>
+</ul>
+<p>This integration would allow you to work with WebAssembly modules in
+JavaScript as follows:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> { multiply } <span class="im">from</span> <span class="st">&#39;./multiply.wasm&#39;</span><span class="op">;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> result <span class="op">=</span> <span class="fu">multiply</span>(<span class="dv">3</span><span class="op">,</span> <span class="dv">14</span>)<span class="op">;</span></span></code></pre></div>
+<h2 id="further-resources">Further Resources</h2>
+<ul>
+<li><a
+href="https://github.com/marcokuoni/public_doc/tree/main/essays/2_webassembly_modules_import_export">Source
+Code</a></li>
+<li><a
+href="https://github.com/marcokuoni/public_doc/tree/main/essays/2_webassembly_modules_import_export/README.de.md">Deutsche
+Version</a></li>
+</ul>
+<p>I am open to refining, expanding, or correcting the article. Feel
+free to provide feedback or get in touch with me.</p>
+<p>Created by <a href="https://marcokuoni.ch">Marco Kuoni, August
+2023</a></p>
+</body>
+</html>

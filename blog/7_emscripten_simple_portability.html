@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Marco Kuoni" />
+  <meta name="keywords" content="WebAssembly, wasi, javascript, Webdev, Webdeveloper, web, html, browser, webapp, webapplication, webapplications, programming, coding, software, technology" />
+  <title>Emscripten Simple Portability</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    div.abstract {
+      margin: 2em 2em 2em 2em;
+      text-align: left;
+      font-size: 85%;
+    }
+    div.abstract-title {
+      font-weight: bold;
+      text-align: center;
+      padding: 0;
+      margin-bottom: 0.5em;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Emscripten Simple Portability</h1>
+<p class="subtitle">C/C++ → WebAssembly</p>
+<p class="author">Marco Kuoni</p>
+<p class="date">2023-09-25T00:00:00+0100</p>
+<div class="abstract">
+<div class="abstract-title">Abstract</div>
+<p>C/C++ → WebAssembly</p>
+</div>
+</header>
+<h1 id="emscripten-simple-portability">Emscripten Simple
+Portability</h1>
+<h2 id="cc-webassembly">C/C++ → WebAssembly</h2>
+<p>Why does achieving simple portability of C/C++ programs to
+WebAssembly make sense?</p>
+<p>There are several reasons for this, some of which are briefly listed
+here:</p>
+<ul>
+<li>There are already large libraries of existing C/C++ programs.</li>
+<li>There are problem-solving scenarios that cannot be optimally
+addressed in JavaScript.</li>
+<li>It does not require a separate runtime and gets delivered already
+compiled. This not only saves memory but also enhances performance on
+end-user devices.</li>
+<li>Multiple programing languages can be used in combination.</li>
+<li>Trustworthy code from trusted sources can be utilized. A good
+example of this is <a href="https://doc.libsodium.org">libsodium</a>,
+which brings the <a href="https://nacl.cr.yp.to/">Networking and
+Cryptography (NaCl)</a> library directly from the source to
+WebAssembly.</li>
+</ul>
+<p><a href="https://emscripten.org">Emscripten</a> lays the foundation
+to make this portability as easy as possible. Emscripten has been around
+for a long time and is developed by the two main contributors, <a
+href="https://kripken.github.io/blog/about/">Alon Zakai</a> and <a
+href="https://github.com/lukewagner">Luke Wagner</a>, who have also been
+involved in asm.js and now WebAssembly to this day. This project also
+builds upon the LLVM platform, with the backend have been switched from
+an asm.js compiler to a WebAssembly compiler in the meantime.</p>
+<p>Implementing such portability is not a straightforward task. For
+example, the fact that a browser is typically a single-threaded
+environment poses challenges. Additionally, there are various interfaces
+with the outside world that need to be connected. The Emscripten
+toolchain provides many useful tools to efficiently port native C/C++
+code into a sandbox, which can then be executed as JavaScript on
+different systems.</p>
+<hr />
+<p>If this is all new territory or if there is a desire to understand
+the details of porting, I recommend consulting my older articles:</p>
+<ul>
+<li><a
+href="https://medium.com/webassembly/simple-c-program-in-webassembly-1a7b148293c2">A
+Simple C Program in WebAssembly</a> details how a simple C program can
+be compiled as WebAssembly and used in a web application.</li>
+<li><a
+href="https://medium.com/webassembly/hello-world-c-program-4b85d3f8fbea">“Hello
+World” C++ Program</a> Is a simple C++ program, but how to implement it
+so that it can be used in a web application as WebAssembly?</li>
+</ul>
+<hr />
+<h3 id="hello-webassembly">Hello WebAssembly</h3>
+<p>To introduce the concept, we will use a very simple C program that
+will be ported using Emscripten.</p>
+<blockquote>
+<p>In the next article, the idea is to port an existing small C/C++
+project using Emscripten. Feel free to share suggestions for possible
+programs. The project will be ported and documented in the upcoming
+article.</p>
+</blockquote>
+<p>To use the Emscripten toolchain, it must be installed first.
+Installation instructions can be found on the <a
+href="https://emscripten.org/docs/getting_started/downloads.html">Emscripten
+website</a>. There is also a <a
+href="https://hub.docker.com/r/emscripten/emsdk">Docker version</a>.</p>
+<p>Here’s what the example program looks like:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode c"><code class="sourceCode c"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    printf<span class="op">(</span><span class="st">&quot;Hello WebAssembly</span><span class="sc">\n</span><span class="st">&quot;</span><span class="op">);</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Compiling the program with
+<code>emcc hello_webassembly.c -o hello_webassembly.js</code> generates
+two files: <code>hello_webassembly.js</code> and
+<code>hello_webassembly.wasm</code>.</p>
+<p>The somewhat large JavaScript file loads, executes, and provides an
+interface (*runtime, sandbox) to the WebAssembly file. This can be used
+in various JavaScript environments, such as a server application in <a
+href="https://nodejs.org/de">Node</a> or <a
+href="https://bun.sh/">Bun</a>:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> node hello_webassembly.js</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Hello</span> WebAssembly</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> bun hello_webassembly.js</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">Hello</span> WebAssembly</span></code></pre></div>
+<p>Or in a client application:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;!DOCTYPE</span> html<span class="dt">&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">html</span><span class="ot"> lang</span><span class="op">=</span><span class="st">&quot;en&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">head</span><span class="dt">&gt;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> charset</span><span class="op">=</span><span class="st">&quot;utf-8&quot;</span><span class="ot"> </span><span class="dt">/&gt;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">title</span><span class="dt">&gt;</span>Emscripten Easy Portability, C/C++ -&gt; WebAssembly<span class="dt">&lt;/</span><span class="kw">title</span><span class="dt">&gt;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">head</span><span class="dt">&gt;</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span><span class="dt">&gt;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">h1</span><span class="dt">&gt;</span>Emscripten Easy Portability, C/C++ -&gt; WebAssembly<span class="dt">&lt;/</span><span class="kw">h1</span><span class="dt">&gt;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">script</span><span class="ot"> src</span><span class="op">=</span><span class="st">&quot;hello_webassembly.js&quot;</span><span class="dt">&gt;&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">body</span><span class="dt">&gt;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">html</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>To start the application, run
+<code>python3 -m http.server</code>.</p>
+<p>Analyze it in the browser by navigating to
+<code>http://localhost:8000</code>.</p>
+<figure>
+<img src="console_log.png" alt="Console Log of the Web Application" />
+<figcaption aria-hidden="true">Console Log of the Web
+Application</figcaption>
+</figure>
+<h3 id="interpretation-of-the-result">Interpretation of the Result</h3>
+<p>Analyze the WebAssembly file using
+<code>wasm-objdump -x hello_webassembly.wasm</code>.</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> wasm-objdump <span class="at">-x</span> hello_webassembly.wasm</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">hello_webassembly.wasm:</span> file format wasm 0x1</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">Section</span> Details:</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="va">Type</span><span class="op">[</span><span class="dv">22</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="er">(</span><span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i32</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i32, i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i32</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32</span><span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i32</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">3</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32</span><span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> nil</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">4</span><span class="pp">]</span> <span class="er">(</span><span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> nil</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">5</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i32</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">6</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i64, i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i64</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">7</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i32, i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> nil</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">8</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i32, i32, i32, i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i32</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">9</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> f64, i32, i32, i32, i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i32</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">10</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> nil</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">11</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i64,</span> i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i32</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">12</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i64, i64, i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> nil</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">13</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i32, i32, i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i32</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">14</span><span class="pp">]</span> <span class="er">(</span><span class="ex">f64,</span> i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> f64</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">15</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i32, i32, i32, i32, i32, i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i32</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">16</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i32, i32, i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> nil</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">17</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i64,</span> i32, i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i32</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">18</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i32, i32, i32, i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> nil</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">19</span><span class="pp">]</span> <span class="er">(</span><span class="ex">f64</span><span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i64</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">20</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i64,</span> i64<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> f64</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">21</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i32, i64, i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i64</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="va">Import</span><span class="op">[</span><span class="dv">2</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> sig=13 <span class="op">&lt;</span>wasi_snapshot_preview1.fd_write<span class="op">&gt;</span> <span class="op">&lt;</span>- wasi_snapshot_preview1.fd_write</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> sig=7 <span class="op">&lt;</span>env.emscripten_memcpy_js<span class="op">&gt;</span> <span class="op">&lt;</span>- env.emscripten_memcpy_js</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a><span class="va">Function</span><span class="op">[</span><span class="dv">58</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> sig=4 <span class="op">&lt;</span>__wasm_call_ctors<span class="op">&gt;</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">3</span><span class="pp">]</span> sig=0</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">4</span><span class="pp">]</span> sig=5 <span class="op">&lt;</span>main<span class="op">&gt;</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">5</span><span class="pp">]</span> sig=5</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">6</span><span class="pp">]</span> sig=1</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">7</span><span class="pp">]</span> sig=2</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">8</span><span class="pp">]</span> sig=6</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">9</span><span class="pp">]</span> sig=1</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">10</span><span class="pp">]</span> sig=2</span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">11</span><span class="pp">]</span> sig=3</span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">12</span><span class="pp">]</span> sig=3</span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">13</span><span class="pp">]</span> sig=3</span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">14</span><span class="pp">]</span> sig=0</span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">15</span><span class="pp">]</span> sig=4</span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">16</span><span class="pp">]</span> sig=2</span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">17</span><span class="pp">]</span> sig=2</span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">18</span><span class="pp">]</span> sig=1</span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">19</span><span class="pp">]</span> sig=5</span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">20</span><span class="pp">]</span> sig=0 <span class="op">&lt;</span>__errno_location<span class="op">&gt;</span></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">21</span><span class="pp">]</span> sig=14</span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">22</span><span class="pp">]</span> sig=1</span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">23</span><span class="pp">]</span> sig=1</span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">24</span><span class="pp">]</span> sig=8</span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">25</span><span class="pp">]</span> sig=15</span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">26</span><span class="pp">]</span> sig=7</span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">27</span><span class="pp">]</span> sig=2</span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">28</span><span class="pp">]</span> sig=16</span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">29</span><span class="pp">]</span> sig=17</span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">30</span><span class="pp">]</span> sig=11</span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">31</span><span class="pp">]</span> sig=11</span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">32</span><span class="pp">]</span> sig=18</span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">33</span><span class="pp">]</span> sig=1</span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">34</span><span class="pp">]</span> sig=9</span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">35</span><span class="pp">]</span> sig=10</span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">36</span><span class="pp">]</span> sig=19</span>
+<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">37</span><span class="pp">]</span> sig=2</span>
+<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">38</span><span class="pp">]</span> sig=0</span>
+<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">39</span><span class="pp">]</span> sig=0</span>
+<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">40</span><span class="pp">]</span> sig=0</span>
+<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">41</span><span class="pp">]</span> sig=4</span>
+<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">42</span><span class="pp">]</span> sig=1</span>
+<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">43</span><span class="pp">]</span> sig=5</span>
+<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">44</span><span class="pp">]</span> sig=12</span>
+<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">45</span><span class="pp">]</span> sig=12</span>
+<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">46</span><span class="pp">]</span> sig=20</span>
+<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">47</span><span class="pp">]</span> sig=3</span>
+<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">48</span><span class="pp">]</span> sig=0</span>
+<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">49</span><span class="pp">]</span> sig=4 <span class="op">&lt;</span>emscripten_stack_init<span class="op">&gt;</span></span>
+<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">50</span><span class="pp">]</span> sig=0 <span class="op">&lt;</span>emscripten_stack_get_free<span class="op">&gt;</span></span>
+<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">51</span><span class="pp">]</span> sig=0 <span class="op">&lt;</span>emscripten_stack_get_base<span class="op">&gt;</span></span>
+<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">52</span><span class="pp">]</span> sig=0 <span class="op">&lt;</span>emscripten_stack_get_end<span class="op">&gt;</span></span>
+<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">53</span><span class="pp">]</span> sig=2 <span class="op">&lt;</span>fflush<span class="op">&gt;</span></span>
+<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">54</span><span class="pp">]</span> sig=0 <span class="op">&lt;</span>stackSave<span class="op">&gt;</span></span>
+<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">55</span><span class="pp">]</span> sig=3 <span class="op">&lt;</span>stackRestore<span class="op">&gt;</span></span>
+<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">56</span><span class="pp">]</span> sig=2 <span class="op">&lt;</span>stackAlloc<span class="op">&gt;</span></span>
+<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">57</span><span class="pp">]</span> sig=0 <span class="op">&lt;</span>emscripten_stack_get_current<span class="op">&gt;</span></span>
+<span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">58</span><span class="pp">]</span> sig=21</span>
+<span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">59</span><span class="pp">]</span> sig=8 <span class="op">&lt;</span>dynCall_jiji<span class="op">&gt;</span></span>
+<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a><span class="va">Table</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb4-93"><a href="#cb4-93" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> table<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> type=funcref initial=6 max=6</span>
+<span id="cb4-94"><a href="#cb4-94" aria-hidden="true" tabindex="-1"></a><span class="va">Memory</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb4-95"><a href="#cb4-95" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> memory<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> pages: initial=256 max=256</span>
+<span id="cb4-96"><a href="#cb4-96" aria-hidden="true" tabindex="-1"></a><span class="va">Global</span><span class="op">[</span><span class="dv">4</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb4-97"><a href="#cb4-97" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> i32 mutable=1 <span class="at">-</span> init i32=65536</span>
+<span id="cb4-98"><a href="#cb4-98" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> i32 mutable=1 <span class="at">-</span> init i32=0</span>
+<span id="cb4-99"><a href="#cb4-99" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> i32 mutable=1 <span class="at">-</span> init i32=0</span>
+<span id="cb4-100"><a href="#cb4-100" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">3</span><span class="pp">]</span> i32 mutable=1 <span class="at">-</span> init i32=0</span>
+<span id="cb4-101"><a href="#cb4-101" aria-hidden="true" tabindex="-1"></a><span class="va">Export</span><span class="op">[</span><span class="dv">15</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb4-102"><a href="#cb4-102" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> memory<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="at">-</span><span class="op">&gt;</span> <span class="st">&quot;memory&quot;</span></span>
+<span id="cb4-103"><a href="#cb4-103" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> <span class="op">&lt;</span>__wasm_call_ctors<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;__wasm_call_ctors&quot;</span></span>
+<span id="cb4-104"><a href="#cb4-104" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">4</span><span class="pp">]</span> <span class="op">&lt;</span>main<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;main&quot;</span></span>
+<span id="cb4-105"><a href="#cb4-105" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> table<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="at">-</span><span class="op">&gt;</span> <span class="st">&quot;__indirect_function_table&quot;</span></span>
+<span id="cb4-106"><a href="#cb4-106" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">20</span><span class="pp">]</span> <span class="op">&lt;</span>__errno_location<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;__errno_location&quot;</span></span>
+<span id="cb4-107"><a href="#cb4-107" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">53</span><span class="pp">]</span> <span class="op">&lt;</span>fflush<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;fflush&quot;</span></span>
+<span id="cb4-108"><a href="#cb4-108" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">49</span><span class="pp">]</span> <span class="op">&lt;</span>emscripten_stack_init<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;emscripten_stack_init&quot;</span></span>
+<span id="cb4-109"><a href="#cb4-109" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">50</span><span class="pp">]</span> <span class="op">&lt;</span>emscripten_stack_get_free<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;emscripten_stack_get_free&quot;</span></span>
+<span id="cb4-110"><a href="#cb4-110" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">51</span><span class="pp">]</span> <span class="op">&lt;</span>emscripten_stack_get_base<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;emscripten_stack_get_base&quot;</span></span>
+<span id="cb4-111"><a href="#cb4-111" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">52</span><span class="pp">]</span> <span class="op">&lt;</span>emscripten_stack_get_end<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;emscripten_stack_get_end&quot;</span></span>
+<span id="cb4-112"><a href="#cb4-112" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">54</span><span class="pp">]</span> <span class="op">&lt;</span>stackSave<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;stackSave&quot;</span></span>
+<span id="cb4-113"><a href="#cb4-113" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">55</span><span class="pp">]</span> <span class="op">&lt;</span>stackRestore<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;stackRestore&quot;</span></span>
+<span id="cb4-114"><a href="#cb4-114" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">56</span><span class="pp">]</span> <span class="op">&lt;</span>stackAlloc<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;stackAlloc&quot;</span></span>
+<span id="cb4-115"><a href="#cb4-115" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">57</span><span class="pp">]</span> <span class="op">&lt;</span>emscripten_stack_get_current<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;emscripten_stack_get_current&quot;</span></span>
+<span id="cb4-116"><a href="#cb4-116" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">59</span><span class="pp">]</span> <span class="op">&lt;</span>dynCall_jiji<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;dynCall_jiji&quot;</span></span>
+<span id="cb4-117"><a href="#cb4-117" aria-hidden="true" tabindex="-1"></a><span class="va">Elem</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb4-118"><a href="#cb4-118" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> segment<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> flags=0 table=0 count=5 <span class="at">-</span> init i32=1</span>
+<span id="cb4-119"><a href="#cb4-119" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> elem<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> = func<span class="pp">[</span><span class="ss">7</span><span class="pp">]</span></span>
+<span id="cb4-120"><a href="#cb4-120" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> elem<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> = func<span class="pp">[</span><span class="ss">6</span><span class="pp">]</span></span>
+<span id="cb4-121"><a href="#cb4-121" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> elem<span class="pp">[</span><span class="ss">3</span><span class="pp">]</span> = func<span class="pp">[</span><span class="ss">8</span><span class="pp">]</span></span>
+<span id="cb4-122"><a href="#cb4-122" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> elem<span class="pp">[</span><span class="ss">4</span><span class="pp">]</span> = func<span class="pp">[</span><span class="ss">34</span><span class="pp">]</span></span>
+<span id="cb4-123"><a href="#cb4-123" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> elem<span class="pp">[</span><span class="ss">5</span><span class="pp">]</span> = func<span class="pp">[</span><span class="ss">35</span><span class="pp">]</span></span>
+<span id="cb4-124"><a href="#cb4-124" aria-hidden="true" tabindex="-1"></a><span class="va">Code</span><span class="op">[</span><span class="dv">58</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb4-125"><a href="#cb4-125" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> size=6 <span class="op">&lt;</span>__wasm_call_ctors<span class="op">&gt;</span></span>
+<span id="cb4-126"><a href="#cb4-126" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">3</span><span class="pp">]</span> size=73</span>
+<span id="cb4-127"><a href="#cb4-127" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">4</span><span class="pp">]</span> size=11 <span class="op">&lt;</span>main<span class="op">&gt;</span></span>
+<span id="cb4-128"><a href="#cb4-128" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">5</span><span class="pp">]</span> size=41</span>
+<span id="cb4-129"><a href="#cb4-129" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">6</span><span class="pp">]</span> size=355</span>
+<span id="cb4-130"><a href="#cb4-130" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">7</span><span class="pp">]</span> size=4</span>
+<span id="cb4-131"><a href="#cb4-131" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">8</span><span class="pp">]</span> size=4</span>
+<span id="cb4-132"><a href="#cb4-132" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">9</span><span class="pp">]</span> size=370</span>
+<span id="cb4-133"><a href="#cb4-133" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">10</span><span class="pp">]</span> size=4</span>
+<span id="cb4-134"><a href="#cb4-134" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">11</span><span class="pp">]</span> size=2</span>
+<span id="cb4-135"><a href="#cb4-135" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">12</span><span class="pp">]</span> size=2</span>
+<span id="cb4-136"><a href="#cb4-136" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">13</span><span class="pp">]</span> size=2</span>
+<span id="cb4-137"><a href="#cb4-137" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">14</span><span class="pp">]</span> size=12</span>
+<span id="cb4-138"><a href="#cb4-138" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">15</span><span class="pp">]</span> size=8</span>
+<span id="cb4-139"><a href="#cb4-139" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">16</span><span class="pp">]</span> size=92</span>
+<span id="cb4-140"><a href="#cb4-140" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">17</span><span class="pp">]</span> size=10</span>
+<span id="cb4-141"><a href="#cb4-141" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">18</span><span class="pp">]</span> size=229</span>
+<span id="cb4-142"><a href="#cb4-142" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">19</span><span class="pp">]</span> size=22</span>
+<span id="cb4-143"><a href="#cb4-143" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">20</span><span class="pp">]</span> size=6 <span class="op">&lt;</span>__errno_location<span class="op">&gt;</span></span>
+<span id="cb4-144"><a href="#cb4-144" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">21</span><span class="pp">]</span> size=142</span>
+<span id="cb4-145"><a href="#cb4-145" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">22</span><span class="pp">]</span> size=526</span>
+<span id="cb4-146"><a href="#cb4-146" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">23</span><span class="pp">]</span> size=204</span>
+<span id="cb4-147"><a href="#cb4-147" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">24</span><span class="pp">]</span> size=363</span>
+<span id="cb4-148"><a href="#cb4-148" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">25</span><span class="pp">]</span> size=2449</span>
+<span id="cb4-149"><a href="#cb4-149" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">26</span><span class="pp">]</span> size=24</span>
+<span id="cb4-150"><a href="#cb4-150" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">27</span><span class="pp">]</span> size=114</span>
+<span id="cb4-151"><a href="#cb4-151" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">28</span><span class="pp">]</span> size=566</span>
+<span id="cb4-152"><a href="#cb4-152" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">29</span><span class="pp">]</span> size=62</span>
+<span id="cb4-153"><a href="#cb4-153" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">30</span><span class="pp">]</span> size=54</span>
+<span id="cb4-154"><a href="#cb4-154" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">31</span><span class="pp">]</span> size=136</span>
+<span id="cb4-155"><a href="#cb4-155" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">32</span><span class="pp">]</span> size=112</span>
+<span id="cb4-156"><a href="#cb4-156" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">33</span><span class="pp">]</span> size=14</span>
+<span id="cb4-157"><a href="#cb4-157" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">34</span><span class="pp">]</span> size=3203</span>
+<span id="cb4-158"><a href="#cb4-158" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">35</span><span class="pp">]</span> size=45</span>
+<span id="cb4-159"><a href="#cb4-159" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">36</span><span class="pp">]</span> size=5</span>
+<span id="cb4-160"><a href="#cb4-160" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">37</span><span class="pp">]</span> size=21</span>
+<span id="cb4-161"><a href="#cb4-161" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">38</span><span class="pp">]</span> size=4</span>
+<span id="cb4-162"><a href="#cb4-162" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">39</span><span class="pp">]</span> size=4</span>
+<span id="cb4-163"><a href="#cb4-163" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">40</span><span class="pp">]</span> size=6</span>
+<span id="cb4-164"><a href="#cb4-164" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">41</span><span class="pp">]</span> size=22</span>
+<span id="cb4-165"><a href="#cb4-165" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">42</span><span class="pp">]</span> size=288</span>
+<span id="cb4-166"><a href="#cb4-166" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">43</span><span class="pp">]</span> size=20</span>
+<span id="cb4-167"><a href="#cb4-167" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">44</span><span class="pp">]</span> size=83</span>
+<span id="cb4-168"><a href="#cb4-168" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">45</span><span class="pp">]</span> size=83</span>
+<span id="cb4-169"><a href="#cb4-169" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">46</span><span class="pp">]</span> size=482</span>
+<span id="cb4-170"><a href="#cb4-170" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">47</span><span class="pp">]</span> size=6</span>
+<span id="cb4-171"><a href="#cb4-171" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">48</span><span class="pp">]</span> size=4</span>
+<span id="cb4-172"><a href="#cb4-172" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">49</span><span class="pp">]</span> size=18 <span class="op">&lt;</span>emscripten_stack_init<span class="op">&gt;</span></span>
+<span id="cb4-173"><a href="#cb4-173" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">50</span><span class="pp">]</span> size=7 <span class="op">&lt;</span>emscripten_stack_get_free<span class="op">&gt;</span></span>
+<span id="cb4-174"><a href="#cb4-174" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">51</span><span class="pp">]</span> size=4 <span class="op">&lt;</span>emscripten_stack_get_base<span class="op">&gt;</span></span>
+<span id="cb4-175"><a href="#cb4-175" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">52</span><span class="pp">]</span> size=4 <span class="op">&lt;</span>emscripten_stack_get_end<span class="op">&gt;</span></span>
+<span id="cb4-176"><a href="#cb4-176" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">53</span><span class="pp">]</span> size=314 <span class="op">&lt;</span>fflush<span class="op">&gt;</span></span>
+<span id="cb4-177"><a href="#cb4-177" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">54</span><span class="pp">]</span> size=4 <span class="op">&lt;</span>stackSave<span class="op">&gt;</span></span>
+<span id="cb4-178"><a href="#cb4-178" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">55</span><span class="pp">]</span> size=6 <span class="op">&lt;</span>stackRestore<span class="op">&gt;</span></span>
+<span id="cb4-179"><a href="#cb4-179" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">56</span><span class="pp">]</span> size=18 <span class="op">&lt;</span>stackAlloc<span class="op">&gt;</span></span>
+<span id="cb4-180"><a href="#cb4-180" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">57</span><span class="pp">]</span> size=4 <span class="op">&lt;</span>emscripten_stack_get_current<span class="op">&gt;</span></span>
+<span id="cb4-181"><a href="#cb4-181" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">58</span><span class="pp">]</span> size=13</span>
+<span id="cb4-182"><a href="#cb4-182" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">59</span><span class="pp">]</span> size=35 <span class="op">&lt;</span>dynCall_jiji<span class="op">&gt;</span></span>
+<span id="cb4-183"><a href="#cb4-183" aria-hidden="true" tabindex="-1"></a><span class="va">Data</span><span class="op">[</span><span class="dv">2</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb4-184"><a href="#cb4-184" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> segment<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> memory=0 size=560 <span class="at">-</span> init i32=65536</span>
+<span id="cb4-185"><a href="#cb4-185" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010000: 2d2b 2020 2030 5830 7800 2d30 582b 3058  <span class="at">-+</span>   0X0x.-0X+0X</span>
+<span id="cb4-186"><a href="#cb4-186" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010010: 2030 582d 3078 2b30 7820 3078 006e 616e   0X-0x+0x 0x.nan</span>
+<span id="cb4-187"><a href="#cb4-187" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010020: 0069 6e66 004e 414e 0049 4e46 002e 0028  .inf.NAN.INF...<span class="er">(</span></span>
+<span id="cb4-188"><a href="#cb4-188" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010030: 6e75 6c6c 2900 4865 6c6c 6f20 5765 6241  null<span class="kw">)</span><span class="ex">.Hello</span> WebA</span>
+<span id="cb4-189"><a href="#cb4-189" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010040: 7373 656d 626c 790a 0000 0000 0000 0000  ssembly.........</span>
+<span id="cb4-190"><a href="#cb4-190" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010050: 1900 0a00 1919 1900 0000 0005 0000 0000  ................</span>
+<span id="cb4-191"><a href="#cb4-191" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010060: 0000 0900 0000 000b 0000 0000 0000 0000  ................</span>
+<span id="cb4-192"><a href="#cb4-192" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010070: 1900 110a 1919 1903 0a07 0001 0009 0b18  ................</span>
+<span id="cb4-193"><a href="#cb4-193" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010080: 0000 0906 0b00 000b 0006 1900 0000 1919  ................</span>
+<span id="cb4-194"><a href="#cb4-194" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010090: 1900 0000 0000 0000 0000 0000 0000 0000  ................</span>
+<span id="cb4-195"><a href="#cb4-195" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 00100a0: 000e 0000 0000 0000 0000 1900 0a0d 1919  ................</span>
+<span id="cb4-196"><a href="#cb4-196" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 00100b0: 1900 0d00 0002 0009 0e00 0000 0900 0e00  ................</span>
+<span id="cb4-197"><a href="#cb4-197" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 00100c0: 000e 0000 0000 0000 0000 0000 0000 0000  ................</span>
+<span id="cb4-198"><a href="#cb4-198" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 00100d0: 0000 0000 0000 0000 0000 000c 0000 0000  ................</span>
+<span id="cb4-199"><a href="#cb4-199" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 00100e0: 0000 0000 0000 0013 0000 0000 1300 0000  ................</span>
+<span id="cb4-200"><a href="#cb4-200" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 00100f0: 0009 0c00 0000 0000 0c00 000c 0000 0000  ................</span>
+<span id="cb4-201"><a href="#cb4-201" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010100: 0000 0000 0000 0000 0000 0000 0000 0000  ................</span>
+<span id="cb4-202"><a href="#cb4-202" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010110: 0000 0000 0010 0000 0000 0000 0000 0000  ................</span>
+<span id="cb4-203"><a href="#cb4-203" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010120: 000f 0000 0004 0f00 0000 0009 1000 0000  ................</span>
+<span id="cb4-204"><a href="#cb4-204" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010130: 0000 1000 0010 0000 0000 0000 0000 0000  ................</span>
+<span id="cb4-205"><a href="#cb4-205" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010140: 0000 0000 0000 0000 0000 0000 0000 0012  ................</span>
+<span id="cb4-206"><a href="#cb4-206" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010150: 0000 0000 0000 0000 0000 0011 0000 0000  ................</span>
+<span id="cb4-207"><a href="#cb4-207" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010160: 1100 0000 0009 1200 0000 0000 1200 0012  ................</span>
+<span id="cb4-208"><a href="#cb4-208" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010170: 0000 1a00 0000 1a1a 1a00 0000 0000 0000  ................</span>
+<span id="cb4-209"><a href="#cb4-209" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010180: 0000 0000 0000 0000 0000 0000 0000 0000  ................</span>
+<span id="cb4-210"><a href="#cb4-210" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010190: 0000 1a00 0000 1a1a 1a00 0000 0000 0009  ................</span>
+<span id="cb4-211"><a href="#cb4-211" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 00101a0: 0000 0000 0000 0000 0000 0000 0000 0000  ................</span>
+<span id="cb4-212"><a href="#cb4-212" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 00101b0: 0000 0000 0000 0000 0000 0000 0000 0000  ................</span>
+<span id="cb4-213"><a href="#cb4-213" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 00101c0: 0000 0014 0000 0000 0000 0000 0000 0017  ................</span>
+<span id="cb4-214"><a href="#cb4-214" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 00101d0: 0000 0000 1700 0000 0009 1400 0000 0000  ................</span>
+<span id="cb4-215"><a href="#cb4-215" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 00101e0: 1400 0014 0000 0000 0000 0000 0000 0000  ................</span>
+<span id="cb4-216"><a href="#cb4-216" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 00101f0: 0000 0000 0000 0000 0000 0000 0016 0000  ................</span>
+<span id="cb4-217"><a href="#cb4-217" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010200: 0000 0000 0000 0000 0015 0000 0000 1500  ................</span>
+<span id="cb4-218"><a href="#cb4-218" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010210: 0000 0009 1600 0000 0000 1600 0016 0000  ................</span>
+<span id="cb4-219"><a href="#cb4-219" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010220: 3031 3233 3435 3637 3839 4142 4344 4546  0123456789ABCDEF</span>
+<span id="cb4-220"><a href="#cb4-220" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> segment<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> memory=0 size=148 <span class="at">-</span> init i32=66096</span>
+<span id="cb4-221"><a href="#cb4-221" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010230: 0500 0000 0000 0000 0000 0000 0100 0000  ................</span>
+<span id="cb4-222"><a href="#cb4-222" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010240: 0000 0000 0000 0000 0000 0000 0000 0000  ................</span>
+<span id="cb4-223"><a href="#cb4-223" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010250: 0000 0000 0200 0000 0300 0000 d802 0100  ................</span>
+<span id="cb4-224"><a href="#cb4-224" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010260: 0004 0000 0000 0000 0000 0000 0100 0000  ................</span>
+<span id="cb4-225"><a href="#cb4-225" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010270: 0000 0000 0000 0000 0000 0000 ffff ffff  ................</span>
+<span id="cb4-226"><a href="#cb4-226" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010280: 0a00 0000 0000 0000 0000 0000 0000 0000  ................</span>
+<span id="cb4-227"><a href="#cb4-227" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0010290: 0000 0000 0000 0000 0000 0000 0000 0000  ................</span>
+<span id="cb4-228"><a href="#cb4-228" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 00102a0: 0000 0000 0000 0000 0000 0000 0000 0000  ................</span>
+<span id="cb4-229"><a href="#cb4-229" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 00102b0: 0000 0000 0000 0000 0000 0000 0000 0000  ................</span>
+<span id="cb4-230"><a href="#cb4-230" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 00102c0: 3002 0100                                0...</span></code></pre></div>
+<p>In comparison to my other articles, the WebAssembly file has now
+become considerably larger. However, it’s interesting to shed light on
+certain sections. In the <code>Export</code> section, you can find a
+<code>main</code> function, which is used as the entry point as
+customary in C/C++. This function is located at position 4 in the
+<code>func[4]</code> array. If you want to analyze the script, you can
+use this function as a starting point and go further with converting the
+WebAssembly to the WAT format.</p>
+<p>To translate you can use the following command:
+<code>wasm2wat hello_webassembly.wasm -o hello_webassembly.wat</code>.</p>
+<p>Excerpt from <code>hello_webassembly.wat</code>:</p>
+<pre class="wat"><code>...
+  (func (;4;) (type 5) (param i32 i32) (result i32)
+    (local i32)
+    call 3
+    local.set 2
+    local.get 2
+    return)
+...</code></pre>
+<p>Here, we won’t delve further into the details. However, it’s
+impressive to see how the entire functionality looks in stack machine
+instructions. More details can also be found in my older articles.</p>
+<p>On the other hand, in the <code>Import</code> section, you’ll find
+the function <code>wasi_snapshot_preview1.fd_write</code>, which must be
+provided by the host system.</p>
+<p>Excerpt from <code>hello_webassembly.js</code>:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode js"><code class="sourceCode javascript"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="op">...</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">var</span> _fd_write <span class="op">=</span> (fd<span class="op">,</span> iov<span class="op">,</span> iovcnt<span class="op">,</span> pnum) <span class="kw">=&gt;</span> {</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>      <span class="co">// hack to support printf in SYSCALLS_REQUIRE_FILESYSTEM=0</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>      <span class="kw">var</span> num <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> (<span class="kw">var</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> iovcnt<span class="op">;</span> i<span class="op">++</span>) {</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">var</span> ptr <span class="op">=</span> HEAPU32[((iov)<span class="op">&gt;&gt;</span><span class="dv">2</span>)]<span class="op">;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">var</span> len <span class="op">=</span> HEAPU32[(((iov)<span class="op">+</span>(<span class="dv">4</span>))<span class="op">&gt;&gt;</span><span class="dv">2</span>)]<span class="op">;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        iov <span class="op">+=</span> <span class="dv">8</span><span class="op">;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (<span class="kw">var</span> j <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> j <span class="op">&lt;</span> len<span class="op">;</span> j<span class="op">++</span>) {</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>          <span class="fu">printChar</span>(fd<span class="op">,</span> HEAPU8[ptr<span class="op">+</span>j])<span class="op">;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        num <span class="op">+=</span> len<span class="op">;</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>      HEAPU32[((pnum)<span class="op">&gt;&gt;</span><span class="dv">2</span>)] <span class="op">=</span> num<span class="op">;</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>      <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    }<span class="op">;</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="op">...</span></span></code></pre></div>
+<p>As described in my previous <a
+href="https://medium.com/webassembly/hello-world-c-program-4b85d3f8fbea">article</a>,
+this is how communication with the outside world takes place.</p>
+<p>It’s important to note that this is an abstraction (sandbox). The
+<code>printf</code> function from the C program is not called on the
+operating system in the traditional sense. Instead, it invokes the
+<code>_fd_write</code> function provided by JavaScript and imported by
+WebAssembly, which then offers the respective implementation of the
+<code>printf</code> function.</p>
+<p>In Ecmascript, this behavior depends on the specific JavaScript
+interpreter making the call. The <code>printChar</code> function from
+the <code>_fd_write</code> function ultimately relies on the following
+output declaration:
+<code>var out = Module['print'] || console.log.bind(console);</code>.
+Here, it’s evident that the interface (*runtime, sandbox) to WebAssembly
+in the JavaScript file is abstracted and provided through a global
+variable called <code>Module</code>. This <code>Module</code> serves as
+the interface between WebAssembly and the rest of the JavaScript
+program.</p>
+<p>Moreover, you can replace the <code>Module['print']</code> function
+with another function using this approach. This would result in the
+replacement function being called instead of the fallback version with
+<code>console.log</code>.</p>
+<blockquote>
+<p>* Personal Opinion: Regarding the JavaScript file and the
+<code>Module</code> variable, it indeed functions as an interface or
+abstraction (runtime enviroment). It provides an unified interface from
+the JavaScript environment (interacting with the <code>Module</code>
+variable) to the <code>WebAssembly</code> API (the actual runtime),
+sandboxing (import/export in the WebAssembly file), and potentially used
+Ecmascript extensions (see the next article). However, this file or
+variable is often referred too as the runtime or sandbox. In my view,
+these terms may not be optimally chosen. In Ecmascript, this terminology
+might stem from legacy practices of the asm.js era when it truly
+represented a runtime.</p>
+</blockquote>
+<h3 id="extension">Extension</h3>
+<p>Ecmascript offers various compilation options that can be utilized,
+for example, to trigger the <code>main</code> function via a button
+click.</p>
+<ul>
+<li><a
+href="https://emscripten.org/docs/tools_reference/emcc.html#emccdoc">Documentation</a></li>
+<li><a
+href="https://github.com/emscripten-core/emscripten/blob/main/src/settings.js">Underlying
+settings.js</a></li>
+</ul>
+<p>As an example, you can prevent the direct startup call of the
+<code>main</code> function (<code>INVOKE_RUN=0</code>) and make this
+method available as <code>_main</code> from the <code>Module</code>
+(<code>EXPORTED_FUNCTIONS=_main</code>).</p>
+<p>Compilation:
+<code>emcc hello_webassembly.c -s INVOKE_RUN=0 -s EXPORTED_FUNCTIONS=_main -o hello_webassembly_extended.js</code>.</p>
+<blockquote>
+<p>Using the <code>EXPORTED_FUNCTIONS</code> option, you can also export
+additional functions directly from WebAssembly, separated by commas. By
+convention, an underscore should be prepended to the function name so
+that the <code>Module</code> can correctly link its internal naming to
+the WebAssembly function. In this specific case, the <code>main</code>
+function is already implicitly present in the list, so the command can
+be shortened to
+<code>emcc hello_webassembly.c -s INVOKE_RUN=0 -o hello_webassembly_extended.js</code>.</p>
+</blockquote>
+<blockquote>
+<p>The <code>EXPORTED_RUNTIME_METHODS</code> option serves a different
+purpose and should not be confused with the
+<code>EXPORTED_FUNCTIONS</code> option. The
+<code>EXPORTED_RUNTIME_METHODS</code> option is used to export methods
+from the JavaScript interface (*runtime, sandbox), from the
+<code>Module</code> itself (not from WebAssembly). For example, the <a
+href="https://emscripten.org/docs/api_reference/preamble.js.html#calling-compiled-c-functions-from-javascript">ccall
+function</a>:
+<code>emcc hello_webassembly.c -s INVOKE_RUN=0 -s EXPORTED_RUNTIME_METHODS=ccall -o hello_webassembly_extended.js</code>,
+which allows calling compiled C functions indirectly like
+<code>Module.ccall("main", "number", [], []);</code> (see the comment in
+the following HTML file).</p>
+</blockquote>
+<blockquote>
+<p>It is also recommended to consult the <a
+href="https://emscripten.org/docs/getting_started/FAQ.html">FAQ</a> of
+Emscripten when facing challenges or questions.</p>
+</blockquote>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;!DOCTYPE</span> html<span class="dt">&gt;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">html</span><span class="ot"> lang</span><span class="op">=</span><span class="st">&quot;en&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">head</span><span class="dt">&gt;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> charset</span><span class="op">=</span><span class="st">&quot;utf-8&quot;</span><span class="ot"> </span><span class="dt">/&gt;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">title</span><span class="dt">&gt;</span>Emscripten Easy Portability, C/C++ -&gt; WebAssembly<span class="dt">&lt;/</span><span class="kw">title</span><span class="dt">&gt;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">head</span><span class="dt">&gt;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span><span class="dt">&gt;</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">h1</span><span class="dt">&gt;</span>Emscripten Easy Portability, C/C++ -&gt; WebAssembly<span class="dt">&lt;/</span><span class="kw">h1</span><span class="dt">&gt;</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">h2</span><span class="dt">&gt;</span>WebAssembly Extended Version<span class="dt">&lt;/</span><span class="kw">h2</span><span class="dt">&gt;</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> id</span><span class="op">=</span><span class="st">&quot;call-main-button&quot;</span><span class="dt">&gt;</span>Call Main<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">script</span><span class="ot"> src</span><span class="op">=</span><span class="st">&quot;hello_webassembly_extended.js&quot;</span><span class="dt">&gt;&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>        <span class="kw">const</span> callMainButton <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">getElementById</span>(<span class="st">&quot;call-main-button&quot;</span>)<span class="op">;</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>        callMainButton<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&quot;click&quot;</span><span class="op">,</span> <span class="kw">function</span> () {</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Module.ccall(&quot;main&quot;, &quot;number&quot;, [], []); // When you used EXPORTED_RUNTIME_METHODS=ccall you can call the main function it like this</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>            Module<span class="op">.</span><span class="fu">_main</span>()<span class="op">;</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>        })<span class="op">;</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">body</span><span class="dt">&gt;</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">html</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>To start the application, run
+<code>python3 -m http.server</code>.</p>
+<p>Analyze it in the browser by navigating to
+<code>http://localhost:8000/index_extended.html</code>.</p>
+<figure>
+<img src="extended_version.png" alt="WebAssembly Extended Version" />
+<figcaption aria-hidden="true">WebAssembly Extended Version</figcaption>
+</figure>
+<figure>
+<img src="console_log_after_click.png"
+alt="Console Log after 8 Clicks on “Call Main”" />
+<figcaption aria-hidden="true">Console Log after 8 Clicks on “Call
+Main”</figcaption>
+</figure>
+<h2 id="further-resources">Further Resources</h2>
+<ul>
+<li><a
+href="https://github.com/marcokuoni/public_doc/tree/main/essays/7_emscripten_simple_portability">Source
+Code</a></li>
+<li><a
+href="https://github.com/marcokuoni/public_doc/tree/main/essays/7_emscripten_simple_portability/README.de.md">Deutsche
+Version</a></li>
+</ul>
+<p>I am open to refining, expanding, or correcting the article. Feel
+free to provide a feedback or get in touch with me.</p>
+<p>Created by <a href="https://marcokuoni.ch">Marco Kuoni, September
+2023</a></p>
+</body>
+</html>

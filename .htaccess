@@ -1,4 +1,6 @@
-# -- concrete5 urls start --
+Options -Indexes
+DirectoryIndex index.html
+
 <IfModule mod_rewrite.c>
 	RewriteCond %{HTTPS} =off
 	RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [QSA,L,R=301]
@@ -9,10 +11,8 @@
 	RewriteBase /
 	RewriteCond %{REQUEST_FILENAME} !-f
 	RewriteCond %{REQUEST_FILENAME}/index.html !-f
-	RewriteCond %{REQUEST_FILENAME}/index.php !-f
-	RewriteRule . index.php [L]
+	RewriteRule . index.html [L]
 </IfModule>
-# -- concrete5 urls end --
 
 # BEGIN Expire headers
 <ifModule mod_expires.c>
@@ -54,18 +54,18 @@
     Header always set Permissions-Policy "geolocation=(self), microphone=() camera=()"
     Header always set X-XSS-Protection "1; mode=block"
     Header always append X-Frame-Options SAMEORIGIN
-    
+
     Header unset Content-Security-Policy
-    Header add Content-Security-Policy   "default-src 'none'; base-uri 'self'; connect-src 'self'; frame-src 'self'; form-action 'self'; img-src 'self' data: https: blob:; script-src 'self' data: blob: 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; frame-ancestors 'self'; font-src 'self'; object-src 'self'; media-src 'self'; "
-    Header unset X-Content-Security-Policy
-    Header add X-Content-Security-Policy "default-src 'none'; base-uri 'self'; connect-src 'self'; frame-src 'self'; form-action 'self'; img-src 'self' data: https: blob:; script-src 'self' data: blob: 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; frame-ancestors 'self'; font-src 'self'; object-src 'self'; media-src 'self'; "
-    Header unset X-WebKit-CSP
-    Header add X-WebKit-CSP              "default-src 'none'; base-uri 'self'; connect-src 'self'; frame-src 'self'; form-action 'self'; img-src 'self' data: https: blob:; script-src 'self' data: blob: 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; frame-ancestors 'self'; font-src 'self'; object-src 'self'; media-src 'self'; "    
+    Header add Content-Security-Policy   "default-src 'none'; base-uri 'self'; connect-src 'self'; frame-src 'self'; form-action 'self'; img-src 'self' data: https: blob:; script-src 'self'; style-src 'self'; frame-ancestors 'self'; font-src 'self'; object-src 'self'; media-src 'self'; "
 </ifModule>
 # END Cache-Control Headers
 
 <FilesMatch "\.(ico|pdf|flv|jpg|jpeg|png|gif|svg|js|css|swf|woff|woff2|otf|eot|ttf|webp|webm|mp4)$">
 Header set Cache-Control "max-age=604800, public"
+</FilesMatch>
+
+<FilesMatch "\.html$">
+  Header set Cache-Control "max-age=3600, must-revalidate"
 </FilesMatch>
 
 <IfModule mod_alias.c>

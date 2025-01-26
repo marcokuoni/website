@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Marco Kuoni" />
+  <meta name="keywords" content="WebAssembly, wasi, javascript, Webdev, Webdeveloper, web, html, browser, webapp, webapplication, webapplications, programming, coding, software, technology" />
+  <title>Simple Rust Program in WebAssembly</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    div.abstract {
+      margin: 2em 2em 2em 2em;
+      text-align: left;
+      font-size: 85%;
+    }
+    div.abstract-title {
+      font-weight: bold;
+      text-align: center;
+      padding: 0;
+      margin-bottom: 0.5em;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Simple Rust Program in WebAssembly</h1>
+<p class="subtitle">An easy guide from Rust to WebAssembly and its use
+in a web application…</p>
+<p class="author">Marco Kuoni</p>
+<p class="date">2024-03-06T00:00:00+0100</p>
+<div class="abstract">
+<div class="abstract-title">Abstract</div>
+<p>An easy guide from Rust to WebAssembly and its use in a web
+application…</p>
+</div>
+</header>
+<h1 id="simple-rust-program-in-webassembly">Simple Rust Program in
+WebAssembly</h1>
+<p>This guide does not cover the details of Rust or its installation.
+Since Rust is LLVM-based, it theoretically only needs a backend for
+WebAssembly. The backend is included in the Rust standard library.</p>
+<hr />
+<p>If LLVM is new or there is further interest in the topic, I recommend
+consulting my previous posts: * <a
+href="https://medium.com/webassembly/simple-c-program-in-webassembly-1a7b148293c2">Simple
+C Program in WebAssembly</a> provides an introduction to LLVM, among
+other things. * <a
+href="https://medium.com/webassembly/first-experiences-with-webassembly-dafb2cf2ab52">First
+Experiences with WebAssembly</a> already uses wasm3 in a REPL-style.</p>
+<hr />
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> rustup target list <span class="kw">|</span> <span class="fu">grep</span> installed</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">wasm32-unknown-unknown</span> <span class="er">(</span><span class="ex">installed</span><span class="kw">)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">wasm32-wasi</span> <span class="er">(</span><span class="ex">installed</span><span class="kw">)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">x86_64-unknown-linux-gnu</span> <span class="er">(</span><span class="ex">installed</span><span class="kw">)</span></span></code></pre></div>
+<p>Rust backends are typically named according to the following schema:
+Instruction Set Architecture (ISA) - Vendor - Operating System (OS).</p>
+<h2 id="multiplying-in-rust">Multiplying in Rust</h2>
+<p>As in the previous articles, a multiplication function is used as an
+example.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>no_mangle<span class="at">]</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">extern</span> <span class="st">&quot;C&quot;</span> <span class="kw">fn</span> multiply(a<span class="op">:</span> <span class="dt">i32</span><span class="op">,</span> b<span class="op">:</span> <span class="dt">i32</span>) <span class="op">-&gt;</span> <span class="dt">i32</span> <span class="op">{</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    a <span class="op">*</span> b</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;2 * 21 = {}&quot;</span><span class="op">,</span> multiply(<span class="dv">2</span><span class="op">,</span> <span class="dv">21</span>))<span class="op">;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>The <code>#[no_mangle]</code> annotation prevents Rust from altering
+the name of the function on compiling.</p>
+<h2 id="compilation">Compilation</h2>
+<h3 id="for-the-host-system">For the Host System</h3>
+<p>To compile and run the program with the default backend, the
+following commands are used:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> rustc multiply.rs</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ./multiply</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">2</span> <span class="pp">*</span> 21 = 42</span></code></pre></div>
+<h3 id="for-webassembly">For WebAssembly</h3>
+<p>To compile the source file into a WebAssembly file, the following
+command is used:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> rustc <span class="at">-A</span> dead_code <span class="at">--target</span> wasm32-unknown-unknown <span class="at">-O</span> <span class="at">--crate-type</span><span class="op">=</span>cdylib multiply.rs <span class="at">-o</span> multiply.wasm</span></code></pre></div>
+<p>Where <code>-A dead_code</code> suppresses the warning for unused
+functions. <code>-O</code> activates optimizations.
+<code>--crate-type=cdylib</code> specifies that a dynamic library should
+be created. <code>-o multiply.wasm</code> specifies the name of the
+output file.</p>
+<p>The result can now be executed with <code>wasm3</code>:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> wasm3 <span class="at">--func</span> multiply multiply.wasm 2 21</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Result:</span> 42</span></code></pre></div>
+<p>Analyze:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> wasm-objdump <span class="at">-x</span> multiply.wasm</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">multiply.wasm:</span>  file format wasm 0x1</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="ex">Section</span> Details:</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="va">Type</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i32</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="va">Function</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> sig=0 <span class="op">&lt;</span>multiply<span class="op">&gt;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="va">Table</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> table<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> type=funcref initial=1 max=1</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="va">Memory</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> memory<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> pages: initial=16</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="va">Global</span><span class="op">[</span><span class="dv">3</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> i32 mutable=1 <span class="op">&lt;</span>__stack_pointer<span class="op">&gt;</span> - init i32=1048576</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> i32 mutable=0 <span class="op">&lt;</span>__data_end<span class="op">&gt;</span> - init i32=1048576</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> i32 mutable=0 <span class="op">&lt;</span>__heap_base<span class="op">&gt;</span> - init i32=1048576</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="va">Export</span><span class="op">[</span><span class="dv">4</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> memory<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="at">-</span><span class="op">&gt;</span> <span class="st">&quot;memory&quot;</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="op">&lt;</span>multiply<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;multiply&quot;</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> <span class="at">-</span><span class="op">&gt;</span> <span class="st">&quot;__data_end&quot;</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> <span class="at">-</span><span class="op">&gt;</span> <span class="st">&quot;__heap_base&quot;</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="va">Code</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> size=7 <span class="op">&lt;</span>multiply<span class="op">&gt;</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="ex">Custom:</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> name: <span class="st">&quot;.debug_info&quot;</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="ex">Custom:</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> name: <span class="st">&quot;.debug_pubtypes&quot;</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a><span class="ex">Custom:</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> name: <span class="st">&quot;.debug_ranges&quot;</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="ex">Custom:</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> name: <span class="st">&quot;.debug_abbrev&quot;</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="ex">Custom:</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> name: <span class="st">&quot;.debug_line&quot;</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a><span class="ex">Custom:</span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> name: <span class="st">&quot;.debug_str&quot;</span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a><span class="ex">Custom:</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> name: <span class="st">&quot;.debug_pubnames&quot;</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a><span class="ex">Custom:</span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> name: <span class="st">&quot;name&quot;</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="op">&lt;</span>multiply<span class="op">&gt;</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="op">&lt;</span>__stack_pointer<span class="op">&gt;</span></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a><span class="ex">Custom:</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> name: <span class="st">&quot;producers&quot;</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a><span class="ex">Custom:</span></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> name: <span class="st">&quot;target_features&quot;</span></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> <span class="pp">[</span><span class="ss">+</span><span class="pp">]</span> mutable-globals</span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> <span class="pp">[</span><span class="ss">+</span><span class="pp">]</span> sign-ext</span></code></pre></div>
+<h4 id="usage-in-a-web-application">Usage in a Web Application</h4>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;!DOCTYPE</span> html<span class="dt">&gt;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">html</span><span class="ot"> lang</span><span class="op">=</span><span class="st">&quot;en&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">head</span><span class="dt">&gt;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">meta</span><span class="ot"> charset</span><span class="op">=</span><span class="st">&quot;utf-8&quot;</span><span class="ot"> </span><span class="dt">/&gt;</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">title</span><span class="dt">&gt;</span>Simple Rust Program in WebAssembly<span class="dt">&lt;/</span><span class="kw">title</span><span class="dt">&gt;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">head</span><span class="dt">&gt;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">body</span><span class="dt">&gt;</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;a&quot;</span><span class="ot"> value</span><span class="op">=</span><span class="st">&quot;3&quot;</span><span class="ot"> </span><span class="dt">/&gt;</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&lt;</span><span class="kw">input</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;b&quot;</span><span class="ot"> value </span><span class="op">=</span><span class="st">&quot;14&quot;</span><span class="ot"> </span><span class="dt">/&gt;</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&lt;</span><span class="kw">button</span><span class="ot"> type</span><span class="op">=</span><span class="st">&quot;submit&quot;</span><span class="dt">&gt;</span>Multiply<span class="dt">&lt;/</span><span class="kw">button</span><span class="dt">&gt;</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        <span class="dt">&lt;</span><span class="kw">output</span><span class="ot"> name</span><span class="op">=</span><span class="st">&quot;output&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;/</span><span class="kw">form</span><span class="dt">&gt;</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>        <span class="kw">function</span> <span class="fu">fetchAndInstantiate</span>(url<span class="op">,</span> importObject) {</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="fu">fetch</span>(url)</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>                <span class="op">.</span><span class="fu">then</span>(response <span class="kw">=&gt;</span> response<span class="op">.</span><span class="fu">arrayBuffer</span>())</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>                <span class="op">.</span><span class="fu">then</span>(bytes <span class="kw">=&gt;</span> WebAssembly<span class="op">.</span><span class="fu">instantiate</span>(bytes<span class="op">,</span> importObject))</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>                <span class="op">.</span><span class="fu">then</span>(results <span class="kw">=&gt;</span> results<span class="op">.</span><span class="at">instance</span>)<span class="op">;</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>        <span class="bu">document</span><span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;DOMContentLoaded&#39;</span><span class="op">,</span> <span class="kw">function</span> () {</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>            <span class="kw">const</span> form <span class="op">=</span> <span class="bu">document</span><span class="op">.</span><span class="fu">querySelector</span>(<span class="st">&#39;form&#39;</span>)<span class="op">;</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>            form<span class="op">.</span><span class="fu">addEventListener</span>(<span class="st">&#39;submit&#39;</span><span class="op">,</span> <span class="kw">function</span> (<span class="bu">event</span>) {</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>                <span class="bu">event</span><span class="op">.</span><span class="fu">preventDefault</span>()<span class="op">;</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>                <span class="kw">const</span> formData <span class="op">=</span> <span class="kw">new</span> <span class="bu">FormData</span>(form)<span class="op">;</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>                <span class="kw">const</span> a <span class="op">=</span> formData<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;a&#39;</span>)<span class="op">;</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>                <span class="kw">const</span> b <span class="op">=</span> formData<span class="op">.</span><span class="fu">get</span>(<span class="st">&#39;b&#39;</span>)<span class="op">;</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>                <span class="fu">fetchAndInstantiate</span>(<span class="st">&#39;multiply.wasm&#39;</span>)</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>                    <span class="op">.</span><span class="fu">then</span>(instance <span class="kw">=&gt;</span> {</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">const</span> result <span class="op">=</span> instance<span class="op">.</span><span class="at">exports</span><span class="op">.</span><span class="fu">multiply</span>(a<span class="op">,</span> b)<span class="op">;</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>                        form<span class="op">.</span><span class="at">output</span><span class="op">.</span><span class="at">value</span> <span class="op">=</span> result<span class="op">;</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>                    })<span class="op">;</span></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>            })<span class="op">;</span></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>        })<span class="op">;</span></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">body</span><span class="dt">&gt;</span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">html</span><span class="dt">&gt;</span></span></code></pre></div>
+<p>Start application: <code>python3 -m http.server</code>.</p>
+<p>Analyze in the browser: <code>http://localhost:8000</code>.</p>
+<figure>
+<img src="webapplication.png" alt="Result of the web application" />
+<figcaption aria-hidden="true">Result of the web
+application</figcaption>
+</figure>
+<h2 id="further-resources">Further Resources</h2>
+<ul>
+<li><a
+href="https://github.com/marcokuoni/public_doc/tree/main/essays/12_simple_rust_program_in_webassembly">Source
+Code</a></li>
+<li><a
+href="https://github.com/marcokuoni/public_doc/tree/main/essays/12_simple_rust_program_in_webassembly/README.de.md">Deutsche
+Version</a></li>
+</ul>
+<p>I am open to refining, expanding, or correcting the article. Feel
+free to provide a feedback or get in touch with me.</p>
+<p>Created by <a href="https://marcokuoni.ch">Marco Kuoni, March
+2024</a></p>
+</body>
+</html>

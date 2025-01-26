@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="de-CH" xml:lang="de-CH">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Marco Kuoni" />
+  <meta name="keywords" content="WebAssembly, wasi, javascript, Webdev, Webdeveloper, web, html, browser, webapp, webapplication, webapplications, programming, coding, software, technology" />
+  <title>WebAssembly Docker Container</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    div.abstract {
+      margin: 2em 2em 2em 2em;
+      text-align: left;
+      font-size: 85%;
+    }
+    div.abstract-title {
+      font-weight: bold;
+      text-align: center;
+      padding: 0;
+      margin-bottom: 0.5em;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">WebAssembly Docker Container</h1>
+<p class="subtitle">Von der Theorie zur Praxis</p>
+<p class="author">Marco Kuoni</p>
+<p class="date">2023-10-04T00:00:00+0100</p>
+<div class="abstract">
+<div class="abstract-title">Zusammenfassung</div>
+<p>Von der Theorie zur Praxis</p>
+</div>
+</header>
+<h1 id="webassembly-docker-container">WebAssembly Docker Container</h1>
+<p><strong>Inhalt:</strong> <a href="#warum">Theorie: Warum?</a> | <a
+href="#wie">Theorie: Wie?</a> | <a href="#docker-desktop-setup">Docker
+Desktop Setup</a> | <a href="#docker-build">Docker Build</a> | <a
+href="#docker-run">Docker Run</a> | <a href="#docker-compose">Docker
+Compose</a> | <a href="#performance">Performance</a> | <a
+href="#weiterführend">Weiterführend</a></p>
+<h2 id="warum">Warum?</h2>
+<p>Das berühmte Zitat von einem der Erfinder von Docker, Solomon Hykes:
+«If WASM+WASI existed in 2008, we wouldn’t have needed to created
+Docker» - «Wenn WASM+WASI 2008 existiert hätte, hätten wir Docker nicht
+erfinden müssen».</p>
+<figure>
+<img src="hykes-wasm-1.jpeg"
+alt="Solomon Hykes Twitter Post about WASM" />
+<figcaption aria-hidden="true">Solomon Hykes Twitter Post about
+WASM</figcaption>
+</figure>
+<p>Es gibt einen fortsetzenden Tweet in dem Solomon davon Spricht, dass
+Docker dadurch nicht verschwinden wird. Vielmehr werden Windows, Linux
+und WebAssembly Container zusammen und nebeneinander auf Docker zum
+Einsatz kommen.</p>
+<p><img src="ContainersCompared.png" alt="Containers Compared" /> Bild
+von <a href="https://kodekloud.com/blog/webassembly-vs-docker/">Kode
+Kloud</a></p>
+<p>Klassische Docker-Container beziehungsweise deren Inhalt sind für für
+eine bestimmte Zielarchitektur (arm, x86, usw.) kompiliert und
+beinhalten verschiedene Betriebssystemkomponenten.</p>
+<p>Wenn nun eine WebAssembly-Runtime zur Verfügung steht, können diese
+Punkte an die Runtime abgeben werden. Als Resultat erhält man einen
+Container, mit folgenden zusätzlichen Vorteilen: * Beinhaltet nur
+Applikationscode was zu kleineren (Speicher) und sicheren
+(Angriffsfläche) Containern mit schnelleren Startzeiten führt. *
+Kompatibilität über verschiedene Architekturen und Betriebssystemen
+hinweg.</p>
+<p>Inklusive den bekannten Vorteilen von WebAssembly selbst: *
+Sicherheit: WebAssembly Programme laufen in einer Sandbox. Es ist nicht
+direkt möglich auf das Hostsystem oder andere Container zuzugreifen. *
+Performance: WebAssembly kommt kompiliert als WebAssembly-Maschinen-Code
+daher. * Und Weiteren, siehe in meinem letzten <a
+href="https://medium.com/webassembly/emscripten-simple-portability-9d3238d99294">Artikel</a></p>
+<table>
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 22%" />
+<col style="width: 59%" />
+</colgroup>
+<thead>
+<tr>
+<th>Aspekt</th>
+<th>Klassische</th>
+<th>WebAssembly Container</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Grösse</td>
+<td>10 bis 100 Fache an MB</td>
+<td>Einige MB</td>
+</tr>
+<tr>
+<td>Startzeiten (<a href="#performance">Performance</a>)</td>
+<td>Sekunden</td>
+<td><a
+href="https://www.docker.com/blog/why-containers-and-webassembly-work-well-together/">Millisekunden</a></td>
+</tr>
+<tr>
+<td>Performance Geschwindigkeit</td>
+<td>Weit Weg von Native</td>
+<td>Nahe an Native</td>
+</tr>
+<tr>
+<td>Läuft in Webbrowser</td>
+<td>Nein</td>
+<td>Ja</td>
+</tr>
+<tr>
+<td>Cross Platform / Portabilität</td>
+<td>Nein</td>
+<td>Ja</td>
+</tr>
+<tr>
+<td>Standards</td>
+<td><a href="https://opencontainers.org/">OCI</a></td>
+<td><a href="https://www.w3.org/community/webassembly/">W3C</a> und
+OCI</td>
+</tr>
+<tr>
+<td>System Interaktionen</td>
+<td>Beinhaltet Betriebs- und Dateisystem</td>
+<td>Benutzt <a href="https://wasi.dev/">WASI</a> um aufs Hostsystem
+zuzugreifen</td>
+</tr>
+</tbody>
+</table>
+<p>Zusammengefasst erhält man mit Docker + WebAssembly * Gebündelten
+Code (Package) * Potentiell näher bei nativer Performance * Hohe
+Sicherheit * Hohe Portabilität * Runtime Isolation * Potentiell
+schnellere Startzeit</p>
+<h2 id="wie">Wie?</h2>
+<p><img src="DockerWasmContainer.png" alt="Docker WASM" /> Bild von <a
+href="https://kodekloud.com/blog/webassembly-vs-docker/">Kode
+Kloud</a></p>
+<p>Nachfolgend werden die einzelnen Schichten und deren Funktionalität
+beziehungsweise Aufgaben kurz erklärt. Dank der breiten Akzeptanz der
+Standardisierungen und des Open-Source Gedanken rund um Container über
+<a href="https://opencontainers.org/">Open Container Initiative</a> und
+der <a href="https://containerd.io/">Container Runtime containerd</a>
+können verschiedene Anwendungen einfach auf verschiedenen Plattformen
+ausgeführt werden.</p>
+<p>Auf der einen Seite bieten standardisierte Schnittstellen für
+containerd, dass dieser auf diversen Plattformen zum Einsatz kommt. Auf
+der anderen Seite ermöglichen die standardisierten Schnittstellen für
+die Container das Implementieren und Ausführen von unterschiedliche
+Anwendungen.</p>
+<h3 id="container-engine">Container Engine</h3>
+<p>Dient als Schnittstelle zwischen den Administratoren und dem
+Container Manager und bietet weitere higher Level plattformspezifische
+Funktionalitäten.</p>
+<p>Bekannte Container Engines sind Docker, Kubernetes, Podman, CRI-O,
+usw.</p>
+<h3 id="container-manager">Container Manager</h3>
+<p>Umfasst das Verwalten von Images (Upload, Download) und von
+Containern (Erstellen, Starten, Stoppen, usw.). Im Grunde alles was man
+braucht, um eine Container-Plattform aufzubauen, ohne sich mit den
+Details des zugrunde liegenden Betriebssystems befassen zu müssen.</p>
+<p>Bekanntester Container Manager ist containerd unterstützt durch <a
+href="https://www.cncf.io/">Cloud Native Computing Foundation</a>.
+Containerd ist ein Open-Source Container Manager (ursprünglich Docker),
+der in Go programmiert ist. Anstatt direkt von Entwicklern verwendet zu
+werden, ist er so konzipiert, dass er in Systeme wie Docker, Kubernetes
+und Weiteren eingebettet werden kann.</p>
+<h3 id="shim">Shim</h3>
+<p>Ein Shim ist eine Software, die zwischen einem Container Manager
+(containerd, cri-o, podman, usw.) und einer Container Runtime (runc,
+crun, wasmedge, usw.) angesiedelt ist und das Integrationsproblem (als
+Schnittstelle) dieser Gegenstücke löst.</p>
+<p>Bekanntester Shim ist die containerd-shim. Sie wird dazu verwendet um
+den jeweiligen Container über eine standardisierte Schnittstelle zu
+verwalten und zu überwachen.</p>
+<h3 id="runtime">Runtime</h3>
+<p>Umfasst das Verwalten von Containerprozessen (Erstellen, Starten,
+Stoppen, usw.) und stellt dazu die Low-Level-Funktionalität bereit. <a
+href="https://github.com/opencontainers/runc">Runc</a> als Beispiel
+einer Runtime für Linux interagiert mit bestehenden
+Low-Level-Linux-Funktionen, wie Namespaces und Control Groups. Dabei
+folgt er dem <a href="https://opencontainers.org/">OCI-Standard</a> und
+enthält <a
+href="https://github.com/opencontainers/runc/tree/main/libcontainer">libcontainer</a>,
+eine Go-Bibliothek zur Erstellung von Containern. Alternativen: * <a
+href="https://github.com/containers/crun">crun</a> für Linux * <a
+href="https://gvisor.dev/">gVisor</a> für Linux * <a
+href="https://github.com/firecracker-microvm/firecracker-containerd">firecracker</a>
+für microVMs * <a href="https://wasmedge.org/">wasmedge</a> für
+WebAssembly in Docker vorhanden und durch <a
+href="https://www.cncf.io/">Cloud Native Computing Foundation</a>
+unterstützt * <a
+href="https://github.com/deislabs/spiderlightning">slight</a> für
+WebAssembly in Docker vorhanden * <a
+href="https://github.com/fermyon/spin">spin</a> für WebAssembly in
+Docker vorhanden * <a href="https://wasmtime.dev/">wasmtime</a> für
+WebAssembly in Docker vorhanden und erstellt durch <a
+href="https://bytecodealliance.org/">Bytecode Alliance</a></p>
+<h4 id="webassemlby">WebAssemlby</h4>
+<p>Weil die bestehenden Shim-Implementierungen auf Artefakten von
+Betriebssystemen beruht, können diese nicht im gleichen Sinn direkt für
+WebAssembly Runtimes verwendet werden. Deshalb kommen WebAssembly
+Runtimes gebündelt mit eigenen Shims daher. Für wasmedge, wasmtime und
+wasmer gibt es hierzu <a
+href="https://github.com/containerd/runwasi">runwasi</a>.</p>
+<p>Runwasi implementiert dabei zwei Modis: * Normal: Ein Shim Prozess
+pro Container * Shared: Ein Manager Service (Container) verwaltet alle
+Shims im Prozess</p>
+<h2 id="docker-desktop-setup">Docker Desktop Setup</h2>
+<p>Zwei Bemerkungen im Vorfeld: * Mit Docker Desktop lässt sich auf
+einfache Art in verschiedenen Betriebssystemen ein WebAssembly Image
+builden und als Container starten. Jedoch kann dies auch mit einer
+standard Docker Installation umgesetzt werden. Weiter Infos unter <a
+href="https://docs.docker.com/engine/alternative-runtimes/#wasmtime">alternative
+Runtimes</a> * Weil die Docker Implementierung eher neu ist, können
+Herausforderungen auftreten. Daher gibt es eine Liste von bekannten <a
+href="https://docs.docker.com/desktop/wasm/#known-issues">Known
+Issues</a> und einen <a
+href="https://github.com/docker/roadmap/issues/426">Issue
+Tracker</a>.</p>
+<p>Als erstens muss <a
+href="https://www.docker.com/products/docker-desktop">Docker Desktop</a>
+heruntergeladen werden. Dieser wird unter Ubuntu wie folgt
+installiert:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod +x ./docker-desktop-4.24.0-amd64.deb</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install ./docker-desktop-4.24.0-amd64.deb</span></code></pre></div>
+<p>Hier gilt es zu beachten, dass die aktuellste Docker Version
+verwendet wird &gt; 4.24.0</p>
+<p>Nach der Installation muss die WASM Runtime aktiviert werden. Was mit
+folgenden Schritten erreicht wird:</p>
+<ol type="1">
+<li>Öffnen von Docker Desktop.</li>
+<li>Navigieren zu <code>Settings</code>.</li>
+<li><code>Features in development</code> auswählen.</li>
+<li>Und folgende Optionen aktivieren:
+<ul>
+<li><code>Use containerd for pulling and storing images</code></li>
+<li><code>Enable Wasm</code></li>
+</ul></li>
+</ol>
+<figure>
+<img src="enable_wasm.png" alt="Enable WebAssembly in Docker Desktop" />
+<figcaption aria-hidden="true">Enable WebAssembly in Docker
+Desktop</figcaption>
+</figure>
+<hr />
+<p><strong>Hinweis:</strong> Gemäss Dokumentation, müsste der Build
+bereits funktionieren. Jedoch war dies bei mir nicht der Fall. Meine
+installierten Builder hatten keine Unterstützung für die WASM/WASI
+Plattform.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> docker buildx ls</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">NAME/NODE</span>       DRIVER/ENDPOINT STATUS  BUILDKIT             PLATFORMS</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">default</span>         docker</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="ex">default</span>       default         running v0.11.6+616c3f613b54 linux/amd64, linux/amd64/v2, linux/amd64/v3, linux/386</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">desktop-linux</span> <span class="pp">*</span> docker</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="ex">desktop-linux</span> desktop-linux   running v0.12.2              linux/amd64, linux/amd64/v2, linux/amd64/v3, linux/arm64, linux/riscv64, linux/ppc64le, linux/s390x, linux/mips64le, linux/mips64</span></code></pre></div>
+<p>Daher habe ich mit folgendem Befehl einen neuen Builder erstellt:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> buildx create <span class="at">--name</span> wasm-builder <span class="at">--platform</span> wasi/wasm</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> buildx use wasm-builder</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> docker buildx ls</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">NAME/NODE</span>       DRIVER/ENDPOINT  STATUS   BUILDKIT             PLATFORMS</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="ex">wasm-builder</span> <span class="pp">*</span>  docker-container</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="ex">wasm-builder0</span> desktop-linux    inactive                      wasi/wasm<span class="pp">*</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">default</span>         docker</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="ex">default</span>       default          running  v0.11.6+616c3f613b54 linux/amd64, linux/amd64/v2, linux/amd64/v3, linux/386</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="ex">desktop-linux</span>   docker</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="ex">desktop-linux</span> desktop-linux    running  v0.12.2              linux/amd64, linux/amd64/v2, linux/amd64/v3, linux/arm64, linux/riscv64, linux/ppc64le, linux/s390x, linux/mips64le, linux/mips64</span></code></pre></div>
+<hr />
+<h2 id="docker-build">Docker Build</h2>
+<p>Nachfolgend als Demonstration ein einfaches Rust Programm
+<code>main.rs</code>:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">let</span> s <span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">=</span> <span class="st">&quot;Hello WebAssembly in Docker!&quot;</span><span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> s)<span class="op">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Dies zusammen mit folgendem <code>Cargo.toml</code>:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode toml"><code class="sourceCode toml"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[package]</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="dt">name</span> <span class="op">=</span> <span class="st">&quot;hello&quot;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="dt">version</span> <span class="op">=</span> <span class="st">&quot;0.1.0&quot;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="dt">authors</span> <span class="op">=</span> <span class="op">[</span><span class="st">&quot;Marco Kuoni&quot;</span><span class="op">]</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="dt">edition</span> <span class="op">=</span> <span class="st">&quot;2021&quot;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="kw">[[bin]]</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="dt">name</span> <span class="op">=</span> <span class="st">&quot;hello&quot;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="dt">path</span> <span class="op">=</span> <span class="st">&quot;src/main.rs&quot;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="kw">[dependencies]</span></span></code></pre></div>
+<p>Und folgendem <code>Dockerfile</code>:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode dockerfile"><code class="sourceCode dockerfile"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># </span><span class="cv">syntax=docker/dockerfile:1</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> <span class="op">--platform=$BUILDPLATFORM</span> rust:1.64 <span class="kw">AS</span> buildbase</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">WORKDIR</span> /src</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="kw">RUN</span> <span class="op">&lt;&lt;EOT</span> bash</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="st">    set -ex</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="st">    apt-get update</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="st">    apt-get install -y </span><span class="dt">\</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="st">        git </span><span class="dt">\</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="st">        clang</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="st">    rustup target add wasm32-wasi</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="op">EOT</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> buildbase <span class="kw">AS</span> build</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="kw">COPY</span> Cargo.toml .</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="kw">COPY</span> src ./src</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Build the Wasm binary</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="kw">RUN</span> <span class="ex">cargo</span> build <span class="at">--target</span> wasm32-wasi <span class="at">--release</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> scratch</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="kw">ENTRYPOINT</span> [ <span class="st">&quot;/hello.wasm&quot;</span> ]</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="kw">COPY</span> <span class="op">--link</span> <span class="op">--from=build</span> /src/target/wasm32-wasi/release/hello.wasm /hello.wasm</span></code></pre></div>
+<p>Bis auf die letzten drei Zeilen, werden die Befehle nur dazu
+verwendet um das Rust Programm im Docker Container zu WebAssembly zu
+kompilieren. Die letzten drei Zeilen sind für das WebAssembly Image
+verantwortlich. In dem es das kompilierte Programm in den Container
+kopiert und den Entrypoint definiert.</p>
+<p>Der effektive Buildprozess wird mit dem folgendem Befehl gestartet:
+<code>docker buildx build --load --platform wasi/wasm -t demo/rust_hello .</code>.</p>
+<hr />
+<p><strong>Hinweis:</strong> Ich musste unter
+<code>Features in development</code> die <code>Builds View</code>
+ausschalten, damit das Image erschien.</p>
+<figure>
+<img src="builds_view.png" alt="Disable Builds View" />
+<figcaption aria-hidden="true">Disable Builds View</figcaption>
+</figure>
+<hr />
+<figure>
+<img src="image.png" alt="WebAssembly Image" />
+<figcaption aria-hidden="true">WebAssembly Image</figcaption>
+</figure>
+<p>Damit wurde nun ein Image für die Plattform WASM erstellt mit einer
+Grösse von 2.52 MB.</p>
+<h2 id="docker-run">Docker Run</h2>
+<p>Nun kann das Image mit folgendem Befehl gestartet werden:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> docker run <span class="at">--rm</span> <span class="at">--runtime</span><span class="op">=</span>io.containerd.wasmedge.v1 <span class="at">--platform</span><span class="op">=</span>wasi/wasm demo/rust_hello</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Hello</span> WebAssembly in Docker!</span></code></pre></div>
+<h2 id="docker-compose">Docker Compose</h2>
+<p>WebAssembly Container können auch zusammen mit anderen Container wie
+gewohnt mit Docker Compose verwendet werden und im Verbund agieren.</p>
+<p>Beispielhaft für unser kleines Programm ein
+<code>docker-compose.yml</code>:</p>
+<pre><code>services:
+  server:
+    image: demo/rust_hello_compose
+    build:
+      context: .
+    runtime: io.containerd.wasmedge.v1</code></pre>
+<p>Welches über <code>docker compose up</code> gestartet wird.</p>
+<figure>
+<img src="docker_compose.png" alt="WebAssembly with Docker Compose" />
+<figcaption aria-hidden="true">WebAssembly with Docker
+Compose</figcaption>
+</figure>
+<h2 id="performance">Performance</h2>
+<p>Ich möchte mich an dieser Stelle bei <a
+href="https://youtu.be/0uo37PAondM?feature=shared&amp;t=178">Thomas
+Bocek</a> bedanken für die Erwähnung dieses Artikels. Im speziellen auch
+die Erwähnung seiner Bedenken bezüglich der Performance von WebAssembly
+in Docker. Daher gehe ich hier kurz auf die drei erwähnten Punkte ein: *
+Startzeit * Image Grösse * Portabilität</p>
+<p>Zum aktuellen Zeitpunkt und gemäss meinem aktuellen Wissen, stimme
+ich Thomas Bocek in allen drei Punkten gerne zu. Wir haben erst gerade
+in den letzten drei Tagen am <a
+href="https://github.com/WebAssembly/meetings/blob/main/main/2023/CG-10.md">CG
+Hybrid Meeting</a> diverse Beispiele und Benchmarks gesehen. Was ausser
+Frage steht ist Portabilität und Sicherheit. Ganz klar Sicherheit wird
+und ist immer ein Thema, aber das Level ist bereits hoch. Um das Thema
+nur ganz kurz anzuschneiden, hier zwei zufällige Beispiele vom <a
+href="https://www.cs.cmu.edu/~wasm/wasm-research-day-2023.html">Reasearch
+Day</a> nach dem CG Meeting: * <a href="https://shravanrn.com/">Shravan
+Ravi Narayan</a> sprach über die Einschränkung von <a
+href="https://en.wikipedia.org/wiki/Spectre_(security_vulnerability)">Spectre
+Attackes</a> bei WebAssembly auf modernen CPUs. * <a
+href="https://users.ece.cmu.edu/~arjunr2/">Arjun Ramesh</a> und <a
+href="https://tianshu.io/">Tianshu Huang</a> über plattformübergreifende
+Instrumentierung, die einzigartige Einblicke in das Programmverhalten
+liefern kann.</p>
+<p>Die Aussage über Image Grösse und Startup kommt als Konsequenz einer
+<a
+href="https://en.wikipedia.org/wiki/Function_as_a_service">Lightweight
+Virtualisierung (FaaS)</a>, welche den Fokus hat jeglichen Overhead von
+klassischen Containern zu vermeiden. Das heisst die Applikation auf
+einem höheren Level zu virtualisieren und damit den klassischen
+Container aufzuteilen in kleinere Funktionseinheiten pro Container. Plus
+kann zusätzlich in WebAssembly Containern auf die komplette in Container
+Linux Umgebung verzichtet werden. Hierzu empfehle ich folgendes Video zu
+<a href="https://www.youtube.com/watch?v=OGcm3rHg630">WebAssembly und
+Containers</a>, welches die WebAssembly Runtime Spin benutzt und dies in
+Anwendung aufzeigt. Jedoch ist es natürlich ein unfairer Vergleich,
+kleinere WebAssembly Service Containern mit komplexeren Applikations
+Containern zu vergleichen. Aber alleine auf Grundlage der Grösse und der
+daraus enthaltenen Codes sollte es möglich sein die Startupzeit eines
+WebAssembly Containers unter die eines klassischen Containers zu
+bringen.</p>
+<p>Ich komme aus dem Embedded-Bereich und eine klassische Diskusion ist
+welche Realtime ist schneller. Ähnliche Diskusionen fallen mir bei
+WebAssembly über native Implementierungen auf. Nehmen wir das Beispiel
+von Docker. Es wird im Container WebAssembly-Maschinen-Code
+ausgeliefert. Welcher von der WebAssembly Runtime in Maschinen-Code für
+die hardware Maschine umgewandelt wird. Bei all diesen Schritten gibt es
+nun noch Kompromisse zu treffen um dies zu realiseren. Jedoch sieht man
+Bestrebungen bis auf die Hardware runter um diese möglichst zu
+eliminieren und somit WebAssembly einen nativen Support zu ermöglichen
+und so ein schnelleres Nativ zu erreichen.</p>
+<p>Ich konnte es nicht lassen und habe ganz kurz Vergleichswerte
+kreiert. Dabei habe ich zweimal das gleiche <code>fibonacci.rs</code>
+Programm klassisch und als WebAssembly Container gebildet.</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> fibonacci(n<span class="op">:</span> <span class="dt">u64</span>) <span class="op">-&gt;</span> <span class="dt">u64</span> <span class="op">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> n <span class="op">==</span> <span class="dv">0</span> <span class="op">{</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> n <span class="op">==</span> <span class="dv">1</span> <span class="op">{</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fibonacci(n <span class="op">-</span> <span class="dv">1</span>) <span class="op">+</span> fibonacci(n <span class="op">-</span> <span class="dv">2</span>)<span class="op">;</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;Starting&quot;</span>)<span class="op">;</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> n <span class="op">=</span> <span class="dv">35</span><span class="op">;</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> result <span class="op">=</span> fibonacci(n)<span class="op">;</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;Fibonacci({}) = {}&quot;</span><span class="op">,</span> n<span class="op">,</span> result)<span class="op">;</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;Stopped&quot;</span>)<span class="op">;</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Und dies mit folgendem Code ausgewertet:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="va">$#</span> <span class="ot">-lt</span> 2 <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;Usage: </span><span class="va">$0</span><span class="st"> &lt;command&gt; &lt;num_runs&gt;&quot;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">exit</span> 1</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="va">command_to_measure</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="va">num_runs</span><span class="op">=</span><span class="va">$2</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="va">total_execution_time</span><span class="op">=</span>0</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="va">total_startup_time</span><span class="op">=</span>0</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="va">total_runtime_time</span><span class="op">=</span>0</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="va">total_shutdown_time</span><span class="op">=</span>0</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="kw">((</span><span class="va">i</span><span class="op">=</span><span class="dv">1</span><span class="kw">;</span> <span class="va">i</span><span class="op">&lt;=</span><span class="va">$num_runs</span><span class="kw">;</span> <span class="va">i</span><span class="op">++</span><span class="kw">));</span> <span class="cf">do</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    <span class="va">start_time</span><span class="op">=</span><span class="va">$(</span><span class="fu">date</span> +%s.%N<span class="va">)</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>    <span class="va">started_time</span><span class="op">=</span><span class="va">$(</span><span class="fu">date</span> +%s.%N<span class="va">)</span></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>    <span class="va">stopped_time</span><span class="op">=</span><span class="va">$(</span><span class="fu">date</span> +%s.%N<span class="va">)</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>    <span class="va">$command_to_measure</span>  <span class="kw">|</span> <span class="cf">while</span> <span class="va">IFS</span><span class="op">=</span> <span class="bu">read</span> <span class="at">-r</span> <span class="va">line</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>            <span class="cf">case</span> <span class="st">&quot;</span><span class="va">$line</span><span class="st">&quot;</span> <span class="kw">in</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;Starting&quot;</span><span class="kw">)</span></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>                    <span class="va">started_time</span><span class="op">=</span><span class="va">$(</span><span class="fu">date</span> +%s.%N<span class="va">)</span></span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>                <span class="cf">;;</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;Stopped&quot;</span><span class="kw">)</span></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>                    <span class="va">stopped_time</span><span class="op">=</span><span class="va">$(</span><span class="fu">date</span> +%s.%N<span class="va">)</span></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>                <span class="cf">;;</span></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>                <span class="pp">*</span><span class="kw">)</span></span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>                <span class="co"># echo &quot;$line&quot;</span></span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>                <span class="cf">;;</span></span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a>            <span class="cf">esac</span></span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">done</span></span>
+<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>    <span class="va">end_time</span><span class="op">=</span><span class="va">$(</span><span class="fu">date</span> +%s.%N<span class="va">)</span></span>
+<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a>    <span class="va">execution_time</span><span class="op">=</span><span class="va">$(</span><span class="bu">echo</span> <span class="st">&quot;</span><span class="va">$end_time</span><span class="st"> - </span><span class="va">$start_time</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="fu">bc</span> <span class="at">-l</span><span class="va">)</span></span>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a>    <span class="va">startup_time</span><span class="op">=</span><span class="va">$(</span><span class="bu">echo</span> <span class="st">&quot;</span><span class="va">$started_time</span><span class="st"> - </span><span class="va">$start_time</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="fu">bc</span> <span class="at">-l</span><span class="va">)</span></span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a>    <span class="va">runtime_time</span><span class="op">=</span><span class="va">$(</span><span class="bu">echo</span> <span class="st">&quot;</span><span class="va">$stopped_time</span><span class="st"> - </span><span class="va">$started_time</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="fu">bc</span> <span class="at">-l</span><span class="va">)</span></span>
+<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a>    <span class="va">shutdown_time</span><span class="op">=</span><span class="va">$(</span><span class="bu">echo</span> <span class="st">&quot;</span><span class="va">$end_time</span><span class="st"> - </span><span class="va">$stopped_time</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="fu">bc</span> <span class="at">-l</span><span class="va">)</span></span>
+<span id="cb11-40"><a href="#cb11-40" aria-hidden="true" tabindex="-1"></a>    <span class="va">total_execution_time</span><span class="op">=</span><span class="va">$(</span><span class="bu">echo</span> <span class="st">&quot;</span><span class="va">$total_execution_time</span><span class="st"> + </span><span class="va">$execution_time</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="fu">bc</span> <span class="at">-l</span><span class="va">)</span></span>
+<span id="cb11-41"><a href="#cb11-41" aria-hidden="true" tabindex="-1"></a>    <span class="va">total_startup_time</span><span class="op">=</span><span class="va">$(</span><span class="bu">echo</span> <span class="st">&quot;</span><span class="va">$total_startup_time</span><span class="st"> + </span><span class="va">$startup_time</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="fu">bc</span> <span class="at">-l</span><span class="va">)</span></span>
+<span id="cb11-42"><a href="#cb11-42" aria-hidden="true" tabindex="-1"></a>    <span class="va">total_runtime_time</span><span class="op">=</span><span class="va">$(</span><span class="bu">echo</span> <span class="st">&quot;</span><span class="va">$total_runtime_time</span><span class="st"> + </span><span class="va">$runtime_time</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="fu">bc</span> <span class="at">-l</span><span class="va">)</span></span>
+<span id="cb11-43"><a href="#cb11-43" aria-hidden="true" tabindex="-1"></a>    <span class="va">total_shutdown_time</span><span class="op">=</span><span class="va">$(</span><span class="bu">echo</span> <span class="st">&quot;</span><span class="va">$total_shutdown_time</span><span class="st"> + </span><span class="va">$shutdown_time</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="fu">bc</span> <span class="at">-l</span><span class="va">)</span></span>
+<span id="cb11-44"><a href="#cb11-44" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb11-45"><a href="#cb11-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-46"><a href="#cb11-46" aria-hidden="true" tabindex="-1"></a><span class="va">avg_total_execution_time</span><span class="op">=</span><span class="va">$(</span><span class="bu">echo</span> <span class="st">&quot;</span><span class="va">$total_execution_time</span><span class="st"> / </span><span class="va">$num_runs</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="fu">bc</span> <span class="at">-l</span><span class="va">)</span></span>
+<span id="cb11-47"><a href="#cb11-47" aria-hidden="true" tabindex="-1"></a><span class="va">avg_total_startup_time</span><span class="op">=</span><span class="va">$(</span><span class="bu">echo</span> <span class="st">&quot;</span><span class="va">$total_startup_time</span><span class="st"> / </span><span class="va">$num_runs</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="fu">bc</span> <span class="at">-l</span><span class="va">)</span></span>
+<span id="cb11-48"><a href="#cb11-48" aria-hidden="true" tabindex="-1"></a><span class="va">avg_total_runtime_time</span><span class="op">=</span><span class="va">$(</span><span class="bu">echo</span> <span class="st">&quot;</span><span class="va">$total_runtime_time</span><span class="st"> / </span><span class="va">$num_runs</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="fu">bc</span> <span class="at">-l</span><span class="va">)</span></span>
+<span id="cb11-49"><a href="#cb11-49" aria-hidden="true" tabindex="-1"></a><span class="va">avg_total_shutdown_time</span><span class="op">=</span><span class="va">$(</span><span class="bu">echo</span> <span class="st">&quot;</span><span class="va">$total_shutdown_time</span><span class="st"> / </span><span class="va">$num_runs</span><span class="st">&quot;</span> <span class="kw">|</span> <span class="fu">bc</span> <span class="at">-l</span><span class="va">)</span></span>
+<span id="cb11-50"><a href="#cb11-50" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;Average execution time over </span><span class="va">$num_runs</span><span class="st"> runs: </span><span class="va">$avg_total_execution_time</span><span class="st"> seconds&quot;</span></span>
+<span id="cb11-51"><a href="#cb11-51" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;Average startup time over </span><span class="va">$num_runs</span><span class="st"> runs: </span><span class="va">$avg_total_startup_time</span><span class="st"> seconds&quot;</span></span>
+<span id="cb11-52"><a href="#cb11-52" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;Average run time over </span><span class="va">$num_runs</span><span class="st"> runs: </span><span class="va">$avg_total_runtime_time</span><span class="st"> seconds&quot;</span></span>
+<span id="cb11-53"><a href="#cb11-53" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">&quot;Average shutdown time over </span><span class="va">$num_runs</span><span class="st"> runs: </span><span class="va">$avg_total_shutdown_time</span><span class="st"> seconds&quot;</span></span></code></pre></div>
+<p>Die verwendeten WebAssembly Runtimes verwenden
+(JIT)[https://en.wikipedia.org/wiki/Just-in-time_compilation]
+theoretisch müsste aber
+(AOT)[https://en.wikipedia.org/wiki/Ahead-of-time_compilation] gemäss <a
+href="https://wasmedge.org/docs/contribute/internal">Ablaufdiagramm</a>
+von zum Beispiel WasmEdge ebenfalls möglich sein.</p>
+<blockquote>
+<p>Leider konnte ich die Runtimes Spin und Slight wie auch eine Wastime
+Vorkompilierung hier nicht berücksichtigen, weil <code>println</code>
+damit aus dem Stand nicht funktionierte.</p>
+</blockquote>
+<h3 id="build">Build</h3>
+<ul>
+<li><code>docker buildx build --load -f DockerfileClassic -t demo/fibonacci_classic .</code></li>
+<li><code>docker buildx build --load --platform wasi/wasm -t demo/fibonacci_webassembly .</code></li>
+<li><code>docker buildx build --load -f DockerfileCompile -t demo/fibonacci_webassembly_compile .</code></li>
+</ul>
+<p><img src="memory_space.png" alt="Memory Space" /> Das Image
+<code>demo/fibonacci_webassembly_compile</code> ist hierbei ein Wasmtime
+AOT Image. Was zu Einschränkungen in der Portabililität führt. Jedoch
+auf Grund der Grösse zum Beispiel bei einem <a
+href="https://de.wikipedia.org/wiki/Embedded_Software_Engineering">Embedded
+Anwendungsfall</a> (IoT) durchaus Sinn machen könnte.</p>
+<h3 id="run">Run</h3>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ./measureAvgTime.sh <span class="st">&quot;docker run --rm --runtime=io.containerd.wasmtime.v1 --platform=wasi/wasm demo/fibonacci_webassembly&quot;</span> 1</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> execution time over 1 runs: .92003518600000000000 seconds</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> startup time over 1 runs: .00223248300000000000 seconds</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> run time over 1 runs: .00182017000000000000 seconds</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> shutdown time over 1 runs: .91598253300000000000 seconds</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ./measureAvgTime.sh <span class="st">&quot;docker run --rm --runtime=io.containerd.wasmtime.v1 --platform=wasi/wasm demo/fibonacci_webassembly&quot;</span> 50</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> execution time over 50 runs: .79499581630000000000 seconds</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> startup time over 50 runs: .00152502634000000000 seconds</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> run time over 50 runs: .00146761514000000000 seconds</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> shutdown time over 50 runs: .79200317482000000000 seconds</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ./measureAvgTime.sh <span class="st">&quot;docker run --rm --runtime=io.containerd.wasmedge.v1 --platform=wasi/wasm demo/fibonacci_webassembly&quot;</span> 1</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> execution time over 1 runs: 9.29828315900000000000 seconds</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> startup time over 1 runs: .00253460300000000000 seconds</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> run time over 1 runs: .00334101000000000000 seconds</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> shutdown time over 1 runs: 9.29240754600000000000 seconds</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ./measureAvgTime.sh <span class="st">&quot;docker run --rm --runtime=io.containerd.wasmedge.v1 --platform=wasi/wasm demo/fibonacci_webassembly&quot;</span> 50</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> execution time over 50 runs: 9.19518831752000000000 seconds</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> startup time over 50 runs: .00185933672000000000 seconds</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> run time over 50 runs: .00179162598000000000 seconds</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> shutdown time over 50 runs: 9.19153735482000000000 seconds</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ./measureAvgTime.sh <span class="st">&quot;docker run --rm demo/fibonacci_classic&quot;</span> 1</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> execution time over 1 runs: .65099649100000000000 seconds</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> startup time over 1 runs: .00220626700000000000 seconds</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> run time over 1 runs: .00316228900000000000 seconds</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> shutdown time over 1 runs: .64562793500000000000 seconds</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ./measureAvgTime.sh <span class="st">&quot;docker run --rm demo/fibonacci_classic&quot;</span> 50</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> execution time over 50 runs: .57311583626000000000 seconds</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> startup time over 50 runs: .00151897690000000000 seconds</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> run time over 50 runs: .00152541990000000000 seconds</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> shutdown time over 50 runs: .57007143946000000000 seconds</span></code></pre></div>
+<p>Dies Resultiert in folgende Perfomancevergleiche verglichen mit der
+klassischen Variante im Mittel über 50 Messungen: <strong>Wasmtime
+50:</strong> * Execution: 38% langsamer * Startup: 0.4% langsamer *
+Runtime: 3.8% schneller * Shutdown: 38 % langsamer</p>
+<p><strong>WasmEdge 50:</strong> * Execution: 1504% langsamer * Startup:
+22% langsamer * Runtime: 17% langsamer * Shutdown: 1512% langsamer *</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ./measureAvgTime.sh <span class="st">&quot;docker run --rm --runtime=io.containerd.wasmtime.v1 --platform=wasi/wasm demo/fibonacci_webassembly&quot;</span> 5000</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> execution time over 5000 runs: .86158419502540000000 seconds</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> startup time over 5000 runs: .00110639370920000000 seconds</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> run time over 5000 runs: .00110670086200000000 seconds</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> shutdown time over 5000 runs: .85937110045420000000 seconds</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ./measureAvgTime.sh <span class="st">&quot;docker run --rm demo/fibonacci_classic&quot;</span> 5000</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> execution time over 5000 runs: .59495869612380000000 seconds</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> startup time over 5000 runs: .00135375017460000000 seconds</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> run time over 5000 runs: .00132145809240000000 seconds</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="ex">Average</span> shutdown time over 5000 runs: .59228348785680000000 seconds</span></code></pre></div>
+<figure>
+<img src="monitoring-5000.png" alt="Monitoring 5000 on i9" />
+<figcaption aria-hidden="true">Monitoring 5000 on i9</figcaption>
+</figure>
+<p><strong>Wasmtime 5000:</strong> * Execution: 45% langsamer * Startup:
+18% schneller * Runtime: 16% schneller * Shutdown: 45% langsamer</p>
+<h3 id="fazit">Fazit</h3>
+<p>Dies soll keine Wissenschaftliche Abhandlung darstellen, jedoch ein
+wenig ein Gefühl für die Unterschiede vermitteln.</p>
+<p>Was für mich auffällig ist: * Das WebAssembly Image ist deutlich
+kleiner * Wasmtime im Vergleich zur klassischen Variante ist nur minimal
+langsamer. Interessanterweise ist vor allem beim Verlassen der
+<code>main</code> Funktion ein klarer unterschied zu spüren. * Die
+WebAssembly Runtimes haben noch grosse Unterschiede in der
+Performance</p>
+<p>Zeit ist aktuell etwas knapp, jedoch werde ich versuchen diesem Thema
+noch mehr Aufmerksamkeit zu schenken. Gerne bin ich auch offen für
+weitere Inputs oder Fragen. Wie schon einleitend erwähnt, sehe ich
+grosse Bestrebungen nach Banchmarks in der Community und daher werden
+wir bestimmt in nächster Zeit noch bessere Tools und Auswertungen
+erhalten.</p>
+<h2 id="weiterführend">Weiterführend</h2>
+<ul>
+<li><a
+href="https://github.com/marcokuoni/public_doc/tree/main/essays/8_webassembly_docker_container">Source
+Code</a></li>
+<li><a
+href="https://github.com/marcokuoni/public_doc/tree/main/essays/8_webassembly_docker_container/README.md">English
+Version</a></li>
+</ul>
+<p>Als Grundlage für diesen Artikel dienten diverse Quellen. Eine Liste
+der Quellen findet sich nachfolgend, wo man auch weitere Beispiele
+findet: * <a
+href="https://www.docker.com/blog/build-share-run-webassembly-apps-docker/">Docker
+Blog: Build, Share, and Run WebAssembly Apps Using Docker</a> * <a
+href="https://www.docker.com/blog/why-containers-and-webassembly-work-well-together/">Docker
+Blog: Why Containers and WebAssembly Work Well Together</a> * <a
+href="https://www.docker.com/blog/docker-wasm-technical-preview/">Docker
+Blog: Introducing the Docker+Wasm Technical Preview</a> * <a
+href="https://docs.docker.com/desktop/wasm/">Docker Desktop
+Dokumentation: Wasm</a> * <a
+href="https://docs.docker.com/engine/alternative-runtimes/#wasmtime">Docker
+Dokumentation: Alternative Runtimes</a> * <a
+href="https://medium.com/@guglielmino/docker-webassembly-a-quick-intro-730c38e8390c">Medium:
+Docker + WebAssembly: a quick intro</a> * <a
+href="https://kodekloud.com/blog/webassembly-vs-docker/">KodeKloud:
+WebAssembly vs Docker: Exploring their Connection and Potential</a> * <a
+href="https://github.com/second-state/runwasi">GitHub: Runwasi</a> * <a
+href="https://github.com/docker/roadmap/issues/426">GitHub: Issues -
+Docker+Wasm Integration</a> * <a
+href="https://wasmlabs.dev/articles/docker-without-containers/">Wasm
+Labs: WebAssembly - Docker without containers!</a> * <a
+href="https://www.secondstate.io/articles/ssvm-performance/">Benchmarks</a>
+* <a
+href="https://medium.com/wasm/webassembly-on-the-server-side-c584f874b4a3">WebAssembly
+on the server-side</a></p>
+<p>Ich bin gerne bereit den Artikel zu präzisieren, erweitern oder zu
+korrigieren. Schreibt ein Feedback oder meldet euch direkt bei mir.</p>
+<p>Erstellt von <a href="https://marcokuoni.ch">Marco Kuoni, Oktober
+2023</a></p>
+</body>
+</html>

@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="de-CH" xml:lang="de-CH">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Marco Kuoni" />
+  <meta name="keywords" content="WebAssembly, wasi, javascript, Webdev, Webdeveloper, web, html, browser, webapp, webapplication, webapplications, programming, coding, software, technology" />
+  <title>Hallo WASI</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    div.abstract {
+      margin: 2em 2em 2em 2em;
+      text-align: left;
+      font-size: 85%;
+    }
+    div.abstract-title {
+      font-weight: bold;
+      text-align: center;
+      padding: 0;
+      margin-bottom: 0.5em;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Hallo WASI</h1>
+<p class="subtitle">Die Einführung von WASI, das praktische Beispiel und
+die wichtigsten Vorteile der Verwendung von WASI mit WebAssembly.</p>
+<p class="author">Marco Kuoni</p>
+<p class="date">2024-09-29T00:00:00+0100</p>
+<div class="abstract">
+<div class="abstract-title">Zusammenfassung</div>
+<p>Die Einführung von WASI, das praktische Beispiel und die wichtigsten
+Vorteile der Verwendung von WASI mit WebAssembly.</p>
+</div>
+</header>
+<h1 id="hallo-wasi">Hallo WASI</h1>
+<p>Einige Funktionalitäten sind in WebAssembly schwieriger zu
+bewerkstelligen auf Grund der auferlegten Sicherheitsziele. Die Sprache
+verlässt sich nicht auf die Sicherheitsmechanismen des Host-Systems, wie
+es bei den meisten der Fall ist. Daher müssen Zugriffe auf das
+Dateisystem, Speicher und weitere Ressourcen explizit erlaubt werden.
+Viele unerkannte Angriffsvektoren werden dadurch ausgeschlossen.
+WebAssembly wurde zudem entwickelt um Code portierbar zu machen, dank
+WASI wird daraus ein portierbare Applikation.</p>
+<p>Im Browser besteht eine genormte Umgebung und APIs können immer
+gleich den WebAssembly Modulen übergeben werden um diese Intern zu
+gebrauchen. Auf dem Betriebssystem wird gewissen Funktionalität vom
+Modul selbst erwartet, sofern die Berechtigung dazu vorhanden ist. Es
+wird ein zusätzlicher Layer benötigt, der durch WASI geschaffen
+wurde.</p>
+<h2 id="hello-wasi-beispiel">“Hello, WASI!” Beispiel</h2>
+<p>Neues Projekt erstellen:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cargo new <span class="at">--bin</span> hello-wasi</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>     <span class="ex">Created</span> binary <span class="er">(</span><span class="ex">application</span><span class="kw">)</span> <span class="kw">`</span><span class="ex">hello-wasi</span><span class="kw">`</span> package</span></code></pre></div>
+<p>Die Datei <code>main.rs</code> im <code>src</code> Verzeichnis sieht
+in etwa so aus:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;Hello, WASI!&quot;</span>)<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Builden:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd hello-wasi/</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cargo build <span class="at">--release</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>   <span class="ex">Compiling</span> hello-wasi v0.1.0 <span class="er">(</span><span class="ex">...</span><span class="kw">)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Finished</span> release <span class="pp">[</span><span class="ss">optimized</span><span class="pp">]</span> target<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="er">in</span> <span class="ex">0.42s</span></span></code></pre></div>
+<p>Ausführen:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cargo run <span class="at">--release</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Finished</span> release <span class="pp">[</span><span class="ss">optimized</span><span class="pp">]</span> target<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="er">in</span> <span class="ex">0.00s</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>     <span class="ex">Running</span> <span class="kw">`</span><span class="ex">target/release/hello-wasi</span><span class="kw">`</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ex">Hello,</span> WASI!</span></code></pre></div>
+<p>Weil Rust LLVM basiert ist, wurde nun ein Binary für das aktuelle
+Betriebssystem erstellt. Dieses Binary funktioniert aber nicht auf einem
+anderen Betriebssystem.</p>
+<h3 id="als-webassembly-modul">Als WebAssembly Modul</h3>
+<p>Versuch ein WebAssembly Modul direkt auszuführen. Es wird wasm3
+verwendet, das gleiche kann auch mit anderen outside-the-browser
+WebAssembly Runtimes gemacht werden (z.B. wasmtime, wasmer, …).</p>
+<hr />
+<p>Falls Rust in WebAssembly neu ist oder mehr Interesse am Thema
+besteht, empfehle ich meine älteren Beiträge zu konsultieren: * <a
+href="https://medium.com/webassembly/simple-rust-program-in-webassembly-8561efd81b9f">Simple
+Rust Program in WebAssembly</a>: Einfache Anleitung wie Rust in einer
+Webanwendung genutzt werden kann</p>
+<hr />
+<p>Builden:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cargo build <span class="at">--target</span> wasm32-unknown-unknown <span class="at">--release</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>   <span class="ex">Compiling</span> hello-wasi v0.1.0 <span class="er">(</span><span class="ex">...</span><span class="kw">)</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Finished</span> release <span class="pp">[</span><span class="ss">optimized</span><span class="pp">]</span> target<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="er">in</span> <span class="ex">0.25s</span></span></code></pre></div>
+<p>Ausführen:</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> wasm3 target/wasm32-unknown-unknown/release/hello-wasi.wasm</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Error:</span> function lookup failed <span class="er">(</span><span class="st">&#39;_start&#39;</span><span class="kw">)</span></span></code></pre></div>
+<p>Das WebAssembly Modul kann nicht direkt ausgeführt werden. Es fehlt
+die korrekte Struktur, wie hier die <code>_start</code> Funktion, um von
+der Runtime ausgeführt zu werden.</p>
+<p>Builden mit WASI-Backend:</p>
+<div class="sourceCode" id="cb7"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cargo build <span class="at">--target</span> wasm32-wasi <span class="at">--release</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>   <span class="ex">Compiling</span> hello-wasi v0.1.0 <span class="er">(</span><span class="ex">...</span><span class="kw">)</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Finished</span> release <span class="pp">[</span><span class="ss">optimized</span><span class="pp">]</span> target<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="er">in</span> <span class="ex">0.16s</span></span></code></pre></div>
+<p>Ausführen:</p>
+<div class="sourceCode" id="cb8"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> wasm3 target/wasm32-wasi/release/hello-wasi.wasm</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Hello,</span> WASI!</span></code></pre></div>
+<p>Analysieren:</p>
+<div class="sourceCode" id="cb9"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> wasm-objdump <span class="at">-x</span> target/wasm32-wasi/release/hello-wasi.wasm</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="ex">hello-wasi.wasm:</span>    file format wasm 0x1</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="ex">Section</span> Details:</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="va">Type</span><span class="op">[</span><span class="dv">18</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="er">(</span><span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> nil</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32</span><span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> nil</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> nil</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">3</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32</span><span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i32</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> type<span class="pp">[</span><span class="ss">4</span><span class="pp">]</span> <span class="er">(</span><span class="ex">i32,</span> i32<span class="kw">)</span> <span class="ex">-</span><span class="op">&gt;</span> i32</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a> <span class="ex">....</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="va">Import</span><span class="op">[</span><span class="dv">4</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> sig=7 <span class="op">&lt;</span>_ZN4wasi13lib_generated22wasi_snapshot_preview18fd_write17haeb8e9d471da6707E<span class="op">&gt;</span> <span class="op">&lt;</span>- wasi_snapshot_preview1.fd_write</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> sig=4 <span class="op">&lt;</span>__imported_wasi_snapshot_preview1_environ_get<span class="op">&gt;</span> <span class="op">&lt;</span>- wasi_snapshot_preview1.environ_get</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">2</span><span class="pp">]</span> sig=4 <span class="op">&lt;</span>__imported_wasi_snapshot_preview1_environ_sizes_get<span class="op">&gt;</span> <span class="op">&lt;</span>- wasi_snapshot_preview1.environ_sizes_get</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">3</span><span class="pp">]</span> sig=1 <span class="op">&lt;</span>__imported_wasi_snapshot_preview1_proc_exit<span class="op">&gt;</span> <span class="op">&lt;</span>- wasi_snapshot_preview1.proc_exit</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="va">Function</span><span class="op">[</span><span class="dv">204</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">4</span><span class="pp">]</span> sig=0 <span class="op">&lt;</span>__wasm_call_ctors<span class="op">&gt;</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">5</span><span class="pp">]</span> sig=0 <span class="op">&lt;</span>_start<span class="op">&gt;</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">6</span><span class="pp">]</span> sig=1 <span class="op">&lt;</span>_ZN3std10sys_common9backtrace28__rust_begin_short_backtrace17h90275821610c977eE<span class="op">&gt;</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">7</span><span class="pp">]</span> sig=3 <span class="op">&lt;</span>_ZN3std2rt10lang_start28_<span class="va">$u7b$$</span>u7b<span class="va">$closure$u7d$$</span>u7d<span class="va">$1</span>7h077ef646d308a78dE<span class="op">&gt;</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">8</span><span class="pp">]</span> sig=3 <span class="op">&lt;</span>_ZN4core3ops8function6FnOnce40call_once<span class="va">$u7b$$</span>u7b<span class="va">$vtable</span>.shim<span class="va">$u7d$$</span>u7d<span class="va">$1</span>7h7be2897f107f95f6E<span class="op">&gt;</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">9</span><span class="pp">]</span> sig=1 <span class="op">&lt;</span>_ZN4core3ptr85drop_in_place<span class="va">$LT$std</span>..rt..lang_start<span class="va">$LT$$</span>LP<span class="va">$$</span>RP<span class="va">$$</span>GT$..<span class="va">$u7b$$</span>u7b<span class="va">$closure$u7d$$</span>u7d<span class="va">$$</span>GT<span class="va">$1</span>7hd02ca6a3ba2a3b9bE<span class="op">&gt;</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">10</span><span class="pp">]</span> sig=0 <span class="op">&lt;</span>_ZN10hello_wasi4main17h913399cd9566c9a2E<span class="op">&gt;</span></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">11</span><span class="pp">]</span> sig=8 <span class="op">&lt;</span>__main_void<span class="op">&gt;</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">12</span><span class="pp">]</span> sig=4 <span class="op">&lt;</span>__rust_alloc<span class="op">&gt;</span></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">13</span><span class="pp">]</span> sig=5 <span class="op">&lt;</span>__rust_dealloc<span class="op">&gt;</span></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">14</span><span class="pp">]</span> sig=7 <span class="op">&lt;</span>__rust_realloc<span class="op">&gt;</span></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">15</span><span class="pp">]</span> sig=2 <span class="op">&lt;</span>__rust_alloc_error_handler<span class="op">&gt;</span></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a> <span class="ex">...</span></span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a><span class="va">Table</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> table<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> type=funcref initial=75 max=75</span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a><span class="va">Memory</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> memory<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> pages: initial=17</span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a><span class="va">Global</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> global<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> i32 mutable=1 <span class="op">&lt;</span>__stack_pointer<span class="op">&gt;</span> - init i32=1048576</span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a><span class="va">Export</span><span class="op">[</span><span class="dv">3</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> memory<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="at">-</span><span class="op">&gt;</span> <span class="st">&quot;memory&quot;</span></span>
+<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">5</span><span class="pp">]</span> <span class="op">&lt;</span>_start<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;_start&quot;</span></span>
+<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">11</span><span class="pp">]</span> <span class="op">&lt;</span>__main_void<span class="op">&gt;</span> -<span class="op">&gt;</span> <span class="st">&quot;__main_void&quot;</span></span>
+<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a><span class="va">Elem</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> segment<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> flags=0 table=0 count=74 <span class="at">-</span> init i32=1</span>
+<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> elem<span class="pp">[</span><span class="ss">1</span><span class="pp">]</span> = func<span class="pp">[</span><span class="ss">10</span><span class="pp">]</span> <span class="op">&lt;</span>_ZN10hello_wasi4main17h913399cd9566c9a2E<span class="op">&gt;</span></span>
+<span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a>  <span class="ex">...</span></span>
+<span id="cb9-48"><a href="#cb9-48" aria-hidden="true" tabindex="-1"></a><span class="va">Code</span><span class="op">[</span><span class="dv">204</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb9-49"><a href="#cb9-49" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">4</span><span class="pp">]</span> size=2 <span class="op">&lt;</span>__wasm_call_ctors<span class="op">&gt;</span></span>
+<span id="cb9-50"><a href="#cb9-50" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">5</span><span class="pp">]</span> size=68 <span class="op">&lt;</span>_start<span class="op">&gt;</span></span>
+<span id="cb9-51"><a href="#cb9-51" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">6</span><span class="pp">]</span> size=11 <span class="op">&lt;</span>_ZN3std10sys_common9backtrace28__rust_begin_short_backtrace17h90275821610c977eE<span class="op">&gt;</span></span>
+<span id="cb9-52"><a href="#cb9-52" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">7</span><span class="pp">]</span> size=15 <span class="op">&lt;</span>_ZN3std2rt10lang_start28_<span class="va">$u7b$$</span>u7b<span class="va">$closure$u7d$$</span>u7d<span class="va">$1</span>7h077ef646d308a78dE<span class="op">&gt;</span></span>
+<span id="cb9-53"><a href="#cb9-53" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">8</span><span class="pp">]</span> size=15 <span class="op">&lt;</span>_ZN4core3ops8function6FnOnce40call_once<span class="va">$u7b$$</span>u7b<span class="va">$vtable</span>.shim<span class="va">$u7d$$</span>u7d<span class="va">$1</span>7h7be2897f107f95f6E<span class="op">&gt;</span></span>
+<span id="cb9-54"><a href="#cb9-54" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">9</span><span class="pp">]</span> size=2 <span class="op">&lt;</span>_ZN4core3ptr85drop_in_place<span class="va">$LT$std</span>..rt..lang_start<span class="va">$LT$$</span>LP<span class="va">$$</span>RP<span class="va">$$</span>GT$..<span class="va">$u7b$$</span>u7b<span class="va">$closure$u7d$$</span>u7d<span class="va">$$</span>GT<span class="va">$1</span>7hd02ca6a3ba2a3b9bE<span class="op">&gt;</span></span>
+<span id="cb9-55"><a href="#cb9-55" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">10</span><span class="pp">]</span> size=82 <span class="op">&lt;</span>_ZN10hello_wasi4main17h913399cd9566c9a2E<span class="op">&gt;</span></span>
+<span id="cb9-56"><a href="#cb9-56" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">11</span><span class="pp">]</span> size=70 <span class="op">&lt;</span>__main_void<span class="op">&gt;</span></span>
+<span id="cb9-57"><a href="#cb9-57" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">12</span><span class="pp">]</span> size=19 <span class="op">&lt;</span>__rust_alloc<span class="op">&gt;</span></span>
+<span id="cb9-58"><a href="#cb9-58" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">13</span><span class="pp">]</span> size=15 <span class="op">&lt;</span>__rust_dealloc<span class="op">&gt;</span></span>
+<span id="cb9-59"><a href="#cb9-59" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> func<span class="pp">[</span><span class="ss">14</span><span class="pp">]</span> size=23 <span class="op">&lt;</span>__rust_realloc<span class="op">&gt;</span></span>
+<span id="cb9-60"><a href="#cb9-60" aria-hidden="true" tabindex="-1"></a> <span class="ex">...</span></span>
+<span id="cb9-61"><a href="#cb9-61" aria-hidden="true" tabindex="-1"></a><span class="va">Data</span><span class="op">[</span><span class="dv">2</span><span class="op">]</span><span class="ex">:</span></span>
+<span id="cb9-62"><a href="#cb9-62" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> segment<span class="pp">[</span><span class="ss">0</span><span class="pp">]</span> <span class="op">&lt;</span>.rodata<span class="op">&gt;</span> memory=0 size=7192 <span class="at">-</span> init i32=1048576</span>
+<span id="cb9-63"><a href="#cb9-63" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0100000: 0200 0000 0400 0000 0400 0000 0300 0000  ................</span>
+<span id="cb9-64"><a href="#cb9-64" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0100010: 0400 0000 0400 0000 4865 6c6c 6f2c 2057  ........Hello, W</span>
+<span id="cb9-65"><a href="#cb9-65" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0100020: 4153 4921 0a00 0000 1800 1000 0d00 0000  ASI!............</span>
+<span id="cb9-66"><a href="#cb9-66" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> 0100030: 2829 0000 0f00 0000 0400 0000 0400 0000  <span class="er">(</span><span class="kw">)</span><span class="ex">..............</span></span>
+<span id="cb9-67"><a href="#cb9-67" aria-hidden="true" tabindex="-1"></a>  <span class="ex">...</span></span>
+<span id="cb9-68"><a href="#cb9-68" aria-hidden="true" tabindex="-1"></a><span class="ex">Custom:</span></span>
+<span id="cb9-69"><a href="#cb9-69" aria-hidden="true" tabindex="-1"></a> <span class="ex">-</span> name: <span class="st">&quot;.debug_abbrev&quot;</span></span>
+<span id="cb9-70"><a href="#cb9-70" aria-hidden="true" tabindex="-1"></a> <span class="ex">...</span></span></code></pre></div>
+<p>Ohne zu tief zu gehen, sieht man nun die gewünschte _start-Funktion
+im Export. Zudem stellt der WASI-Compiler für WebAssembly Module einen
+Standard zur Verfügung um Funktionalität zu importieren, die das Modul
+selbst gebrauchen möchte. Genaueres hierzu im <a
+href="https://github.com/bytecodealliance/wasmtime/blob/main/docs/WASI-tutorial.md#web-assembly-text-example">WASI
+Tutorial von wasmtime</a>.</p>
+<hr />
+<p>Als Tipp können Rust basierende WASI Applikationen direkt mit cargo
+entwickelt werden</p>
+<p>Installieren:</p>
+<div class="sourceCode" id="cb10"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cargo install cargo-wasi</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Updating</span> crates.io index</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="ex">Downloaded</span> cargo-wasi v0.1.28</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="ex">Downloaded</span> 1 crate <span class="er">(</span><span class="ex">13.9</span> KB<span class="kw">)</span> <span class="er">in</span> <span class="ex">1.03s</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="ex">Installing</span> cargo-wasi v0.1.28</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Updating</span> crates.io index</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="ex">Downloaded</span> cargo-wasi-exe-x86_64-unknown-linux-musl v0.1.28</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="ex">Downloaded</span> 1 crate <span class="er">(</span><span class="ex">5.4</span> MB<span class="kw">)</span> <span class="er">in</span> <span class="ex">3.12s</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>   <span class="ex">Compiling</span> cfg-if v1.0.0</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>   <span class="ex">Compiling</span> cargo-wasi-exe-x86_64-unknown-linux-musl v0.1.28</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>   <span class="ex">Compiling</span> cargo-wasi v0.1.28</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Finished</span> release <span class="pp">[</span><span class="ss">optimized</span><span class="pp">]</span> target<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="er">in</span> <span class="ex">9.85s</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="ex">Installing</span> .../.cargo/bin/cargo-wasi</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>   <span class="ex">Installed</span> package <span class="kw">`</span><span class="ex">cargo-wasi</span> v0.1.28<span class="kw">`</span> <span class="er">(</span><span class="ex">executable</span> <span class="kw">`</span><span class="ex">cargo-wasi</span><span class="kw">`)</span></span></code></pre></div>
+<p>Ausführen:</p>
+<div class="sourceCode" id="cb11"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cargo wasi run</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>   <span class="ex">Compiling</span> hello-wasi v0.1.0 <span class="er">(</span><span class="ex">...</span><span class="kw">)</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Finished</span> dev [unoptimized + debuginfo] target<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="er">in</span> <span class="ex">0.06s</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>     <span class="ex">Running</span> <span class="kw">`</span><span class="ex">.../.cargo/bin/cargo-wasi</span> target/wasm32-wasi/debug/hello-wasi.wasm<span class="kw">`</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>     <span class="ex">Running</span> <span class="kw">`</span><span class="ex">target/wasm32-wasi/debug/hello-wasi.wasm</span><span class="kw">`</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="ex">Hello,</span> WASI!</span></code></pre></div>
+<hr />
+<p>Compilierung zu WASI Code wird für verschiedene Programmiersprachen
+angeboten. Als Beispiel für C/C++ <a
+href="https://github.com/wasienv/wasienv">wasienv</a>.</p>
+<p>WASI Applikationen können auf diversen Plattformen ausgeführt werden
+wie auch mit Node.js, Deno, <a
+href="https://dev.to/ndesmic/building-a-minimal-wasi-polyfill-for-browsers-4nel">Browser</a>
+usw.</p>
+<h2 id="weiterführend">Weiterführend</h2>
+<ul>
+<li><a
+href="https://github.com/marcokuoni/public_doc/tree/main/essays/14_hello_wasi">Source
+Code</a></li>
+<li><a
+href="https://github.com/marcokuoni/public_doc/tree/main/essays/14_hello_wasi/README.md">English
+Version</a></li>
+</ul>
+<p>Ich bin gerne bereit den Artikel zu präzisieren, erweitern oder zu
+korrigieren. Schreibt ein Feedback oder meldet euch direkt bei mir.</p>
+<p>Erstellt von <a href="https://marcokuoni.ch">Marco Kuoni, September
+2024</a></p>
+</body>
+</html>
