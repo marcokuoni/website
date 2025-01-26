@@ -1,2 +1,202 @@
-https://marcokuoni.ch/index
-https://marcokuoni.ch/impressum
+<urlset>
+  <url>
+    <loc>https://marcokuoni.ch/</loc>
+    <lastmod>2025-01-26T18:33:36+00:00</lastmod>
+    <priority>1.00</priority>
+  </url>
+  <url>
+    <loc>https://marcokuoni.ch/blog/</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://marcokuoni.ch/impressum.html</loc>
+    <lastmod>2025-01-26T18:33:36+00:00</lastmod>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/1_first_experiences_with_webassembly.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/1_first_experiences_with_webassembly.de.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/2_webassembly_modules_import_export.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/2_webassembly_modules_import_export.de.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/3_javascript_and_bytes.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/3_javascript_and_bytes.de.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/4_webassembly_memory.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/4_webassembly_memory.de.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/5_simple_c_programm_in_webassembly.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/5_simple_c_programm_in_webassembly.de.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/6_hello_world_cpp_programm.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/6_hello_world_cpp_programm.de.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/7_emscripten_simple_portability.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/7_emscripten_simple_portability.de.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/8_webassembly_docker_container.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/8_webassembly_docker_container.de.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/9_porting_third_party_to_webassembly.de.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/10_webassembly_table_dynamic_linking.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/10_webassembly_table_dynamic_linking.de.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/11_from_c_through_emscripten_to_a_deno_server_application.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/11_from_c_through_emscripten_to_a_deno_server_application.de.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/12_simple_rust_program_in_webassembly.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/12_simple_rust_program_in_webassembly.de.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/13_hello_wasm_bindgen.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>
+      https://marcokuoni.ch/blog/13_hello_wasm_bindgen.de.html
+</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>https://marcokuoni.ch/blog/14_hello_wasi.html</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+  <url>
+    <loc>https://marcokuoni.ch/blog/14_hello_wasi.de.html</loc>
+    <lastmod>2025-01-26T18:33:34+00:00</lastmod>
+    <priority>0.64</priority>
+  </url>
+</urlset>
