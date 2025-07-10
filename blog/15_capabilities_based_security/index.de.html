@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="de-CH" xml:lang="de-CH">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Marco Kuoni" />
+  <meta name="keywords" content="WebAssembly, wasi, javascript, Webdev, Webdeveloper, web, html, browser, webapp, webapplication, webapplications, programming, coding, software, technology" />
+  <title>Capabilities-Based Security mit WASI</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    div.abstract {
+      margin: 2em 2em 2em 2em;
+      text-align: left;
+      font-size: 85%;
+    }
+    div.abstract-title {
+      font-weight: bold;
+      text-align: center;
+      padding: 0;
+      margin-bottom: 0.5em;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Capabilities-Based Security mit WASI</h1>
+<p class="subtitle">Sicherer Ressourcenzugriff in WebAssembly mit
+Capabilities-Based Security und WASI</p>
+<p class="author">Marco Kuoni</p>
+<p class="date">2025-07-10T00:00:00+0100</p>
+<div class="abstract">
+<div class="abstract-title">Zusammenfassung</div>
+<p>WASI implementiert Capabilities-Based Security, indem es WebAssembly
+Modulen nur explizit zugewiesene Zugriffe gewährt. Anstatt globaler
+Benutzerrechte erhalten Programme einzelne «Schlüssel» (Capabilities)
+für genau die Ressourcen, die sie benötigen. Das schützt vor Missbrauch
+wie dem Confused Deputy Problem. Ein Beispiel zeigt, wie Dateizugriffe
+in WASI nur mit vorgängig gewährtem Ordnerzugriff funktionieren, wodurch
+Sandbox-Sicherheit sichergestellt wird.</p>
+</div>
+</header>
+<h1 id="capabilities-based-security-mit-wasi">Capabilities-Based
+Security mit WASI</h1>
+<p>Es soll die Möglichkeit bestehen, Anwendungen auf unseren Systemen
+Funktionalitäten beziehungsweise Zugriffe kontrolliert zur Verfügung zu
+stellen. Da im Voraus nicht bestimmt werden kann welche Software
+böswillig sein könnte, machen standardisierte Sandbox Umgebungen
+Sinn.</p>
+<p>Von Anfang an war WASI bestrebt <a
+href="https://de.wikipedia.org/wiki/Capability-based_security">Capabilities-Based
+Security</a> für die einzelnen WebAssembly Modulen durchzusetzen.</p>
+<hr />
+<p>Capabilities-Based Security: Das ist ein Sicherheitsmodell, bei dem
+Zugriffsrechte direkt als Objekte (Capabilities) vergeben werden.</p>
+<ul>
+<li>Eine Capability ist wie ein Schlüssel, der dir erlaubt, etwas
+Bestimmtes zu tun.</li>
+<li>Wenn du keinen Schlüssel hast, kannst du es nicht tun.</li>
+<li>Programme oder Benutzer erhalten nur genau die Schlüssel, die sie
+brauchen (Principle of Least Privilege).</li>
+</ul>
+<p>Somit keine globale Zugriffskontrolle mit Benutzer-IDs und Checks.
+Stattdessen werden Capabilities direkt weitergegeben.</p>
+<hr />
+<p>WebAssembly gibt willkürlichem Code nicht direkten Zugriff zum
+Speicher. Genau gleich macht es WASI mit sensiblen Ressourcen wie
+Datei-Handler, Netzwerksockets, oder Details zu Unterprozessen. Diese
+Ressourcen werden den WebAssembly Modulen mit klar definierten und
+unfälschbaren Handlern zur Verfügung gestellt.</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::</span>fs<span class="op">;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::io::</span><span class="op">{</span><span class="bu">Read</span><span class="op">,</span> <span class="bu">Write</span><span class="op">};</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> greeting <span class="op">=</span> <span class="st">&quot;Hello Security&quot;</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> outfile <span class="op">=</span> <span class="st">&quot;hello.txt&quot;</span><span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> output_file <span class="op">=</span> <span class="pp">fs::File::</span>create(outfile)<span class="op">.</span>expect(<span class="op">&amp;</span><span class="pp">format!</span>(<span class="st">&quot;Error creating {}&quot;</span><span class="op">,</span> outfile))<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    output_file</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>write_all(greeting<span class="op">.</span>as_bytes())</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>expect(<span class="op">&amp;</span><span class="pp">format!</span>(<span class="st">&quot;Error writing: {}&quot;</span><span class="op">,</span> outfile))<span class="op">;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> input_file <span class="op">=</span> <span class="pp">fs::File::</span>open(outfile)<span class="op">.</span>expect(<span class="op">&amp;</span><span class="pp">format!</span>(<span class="st">&quot;Error opening {}&quot;</span><span class="op">,</span> outfile))<span class="op">;</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> input <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>new()<span class="op">;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    input_file</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>read_to_string(<span class="op">&amp;</span><span class="kw">mut</span> input)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>expect(<span class="op">&amp;</span><span class="pp">format!</span>(<span class="st">&quot;Error reading: {}&quot;</span><span class="op">,</span> outfile))<span class="op">;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">&quot;Read in from file: {}&quot;</span><span class="op">,</span> input)<span class="op">;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<p>Builden:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cargo build <span class="at">--release</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>   <span class="ex">Compiling</span> hello-security v0.1.0 <span class="er">(</span><span class="ex">...</span><span class="kw">)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Finished</span> <span class="kw">`</span><span class="ex">release</span><span class="kw">`</span> profile <span class="pp">[</span><span class="ss">optimized</span><span class="pp">]</span> target<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="er">in</span> <span class="ex">0.57s</span></span></code></pre></div>
+<p>Ausführen:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cargo run <span class="at">--release</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Finished</span> <span class="kw">`</span><span class="ex">release</span><span class="kw">`</span> profile <span class="pp">[</span><span class="ss">optimized</span><span class="pp">]</span> target<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="er">in</span> <span class="ex">0.00s</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>     <span class="ex">Running</span> <span class="kw">`</span><span class="ex">target/release/hello-security</span><span class="kw">`</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ex">Read</span> in from file: Hello Security</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cat hello.txt</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ex">Hello</span> Security</span></code></pre></div>
+<p>Dieses kleine Rust Beispiel zeigt einen einfachen Zugriff auf das
+Dateisystem. Es wird eine Datei erstellt, darin ein Text abgelegt,
+dieser von der Datei wieder eingelesen und auf der Konsole ausgegeben.
+Das Programm zu schreiben und zu compilieren ist dabei keine
+Herausforderung. Selbst das ausführen und das erstellen beziehungsweise
+zugreifen auf das Dateisystem geht ohne Probleme. Dies ist Möglich, da
+ich als Benutzer und Ausführer des Programms die nötigen Berechtigungen
+auf den benutzten Ressourcen verwende.</p>
+<p>In diesem Beispiel wurde das Programm selbst geschrieben, was aber
+wenn die Software von irgendwo her stammt. Dieses Phänomen wird unter <a
+href="https://en.wikipedia.org/wiki/Confused_deputy_problem">Confused
+Deputy Problem</a> gehandelt.</p>
+<hr />
+<p>Das Confused Deputy Problem tritt auf, wenn ein Programm (der
+«Deputy», also «Stellvertreter») Berechtigungen von jemand anderem nutzt
+und dabei aus Versehen etwas macht, was es nicht sollte. Man geht zur
+Post und sagt: «Schick dieses Paket gratis, ich bin ein
+Mitarbeiter.»</p>
+<hr />
+<p>Was passiert nun wenn man nicht direkt in ein ausführbares Binary
+sondern über WebAssembly compiliert.</p>
+<p>Builden:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cargo build <span class="at">--target</span> wasm32-wasip2 <span class="at">--release</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>   <span class="ex">Compiling</span> hello-security v0.1.0 <span class="er">(</span><span class="ex">...</span><span class="kw">)</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Finished</span> <span class="kw">`</span><span class="ex">release</span><span class="kw">`</span> profile <span class="pp">[</span><span class="ss">optimized</span><span class="pp">]</span> target<span class="er">(</span><span class="ex">s</span><span class="kw">)</span> <span class="er">in</span> <span class="ex">0.30s</span></span></code></pre></div>
+<hr />
+<p>Notiz: Weil WASI noch stark in Entwicklung ist können Targets laufend
+ändern, um die aktuellen Möglichkeiten anzuzeigen
+<code>rustc --print target-list</code>. Sollten Fehler auftauchen, wie
+das <code>std</code> nicht gefunden wird. So kann es sein, dass das
+Target nicht installiert ist
+<code>rustup target add wasm32-wasip2</code></p>
+<hr />
+<p>Ausführen:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> wasmtime target/wasm32-wasip2/release/hello-security.wasm</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">thread</span> <span class="st">&#39;main&#39;</span> panicked at src/main.rs:7:53:</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ex">Error</span> creating hello.txt: Custom { kind: Uncategorized, error: <span class="st">&quot;failed to find a pre-opened file descriptor through which </span><span class="dt">\&quot;</span><span class="st">hello.txt</span><span class="dt">\&quot;</span><span class="st"> could be opened&quot;</span> }</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="ex">note:</span> run with <span class="kw">`</span><span class="va">RUST_BACKTRACE</span><span class="op">=</span>1<span class="kw">`</span> <span class="ex">environment</span> variable to display a backtrace</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="ex">Error:</span> failed to run main module <span class="kw">`</span>target/wasm32-wasip2/release/hello-security.wasm<span class="kw">`</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="ex">Caused</span> by:</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="ex">0:</span> failed to invoke <span class="kw">`</span><span class="ex">run</span><span class="kw">`</span> function</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="ex">1:</span> error while executing at wasm backtrace:</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>           <span class="ex">0:</span>   0x81cb <span class="at">-</span> hello_security-090e4df4606edf50.wasm!__rust_start_panic</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>           <span class="ex">1:</span>   0x7de4 <span class="at">-</span> hello_security-090e4df4606edf50.wasm!rust_panic</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>           <span class="ex">2:</span>   0x7db7 <span class="at">-</span> hello_security-090e4df4606edf50.wasm!std::panicking::rust_panic_with_hook::hb7190c590f9be4d8</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>           <span class="ex">3:</span>   0x6d7a <span class="at">-</span> hello_security-090e4df4606edf50.wasm!std::panicking::begin_panic_handler::{{closure}}::h48f52bd42a75647b</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>           <span class="ex">4:</span>   0x6cdb <span class="at">-</span> hello_security-090e4df4606edf50.wasm!std::sys::backtrace::__rust_end_short_backtrace::h03e3c9e25b76593d</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>           <span class="ex">5:</span>   0x76ec <span class="at">-</span> hello_security-090e4df4606edf50.wasm!rust_begin_unwind</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>           <span class="ex">6:</span>   0xdec7 <span class="at">-</span> hello_security-090e4df4606edf50.wasm!core::panicking::panic_fmt::h6517fc7e4d8ce25f</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>           <span class="ex">7:</span>   0xfb94 <span class="at">-</span> hello_security-090e4df4606edf50.wasm!core::result::unwrap_failed::hdd25c2c6a49e7f15</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>           <span class="ex">8:</span>   0x17a1 <span class="at">-</span> hello_security-090e4df4606edf50.wasm!hello_security::main::hd3fa14b8c58e2c8a</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>           <span class="ex">9:</span>   0x1460 <span class="at">-</span> hello_security-090e4df4606edf50.wasm!std::sys::backtrace::__rust_begin_short_backtrace::hfedc2d3118e53f13</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>          <span class="ex">10:</span>   0x1453 <span class="at">-</span> hello_security-090e4df4606edf50.wasm!std::rt::lang_start::{{closure}}::h72fa6f82f816a30e</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>          <span class="ex">11:</span>   0x3977 <span class="at">-</span> hello_security-090e4df4606edf50.wasm!std::rt::lang_start_internal::haa6ee9ed7c5d7b00</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>          <span class="ex">12:</span>   0x1b33 <span class="at">-</span> hello_security-090e4df4606edf50.wasm!__main_void</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>          <span class="ex">13:</span>   0x142c <span class="at">-</span> hello_security-090e4df4606edf50.wasm!_start</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>          <span class="ex">14:</span>  0x1a88e <span class="at">-</span> wit-component:adapter:wasi_snapshot_preview1!wasi:cli/run@0.2.3#run</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    <span class="ex">2:</span> wasm trap: wasm <span class="kw">`</span><span class="ex">unreachable</span><span class="kw">`</span> instruction executed</span></code></pre></div>
+<hr />
+<p>Notiz: Weil WASI noch stark in Entwicklung ist ändern auch die
+Engines laufend, bei Problemen hilft vermutlich ein <a
+href="https://wasmtime.dev/">Wasmtime</a> Update
+<code>curl https://wasmtime.dev/install.sh -sSf | bash</code>.</p>
+<hr />
+<p>Beim Ausführen des WebAssembly’s scheint nun etwas nicht mehr zu
+funktionieren. Wie der Fehlermeldung zu entnehmen ist «failed to find a
+pre-opened file descriptor through which "hello.txt" could be opened»,
+fehlt dem WASI Host der «pre-opened file descriptor» um auf die Datei
+zuzugreifen.</p>
+<div class="sourceCode" id="cb6"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> wasmtime <span class="at">--dir</span><span class="op">=</span>. target/wasm32-wasip2/release/hello-security.wasm</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">Read</span> in from file: Hello Security</span></code></pre></div>
+<p>Führen wir nun Wasmtime mit der Erlaubnis aus, auf den aktuellen
+Ordners zugriff zu haben, funktioniert alles wie erwartet.</p>
+<h2 id="weiterführend">Weiterführend</h2>
+<ul>
+<li><a
+href="https://github.com/marcokuoni/public_doc/tree/main/essays/15_capabilities_based_security">Source
+Code</a></li>
+<li><a
+href="https://github.com/marcokuoni/public_doc/tree/main/essays/15_capabilities_based_security/README.md">English
+Version</a></li>
+</ul>
+<p>Ich bin gerne bereit den Artikel zu präzisieren, erweitern oder zu
+korrigieren. Schreibt ein Feedback oder meldet euch direkt bei mir.</p>
+<p>Erstellt von <a href="https://marcokuoni.ch">Marco Kuoni, Juli
+2025</a></p>
+</body>
+</html>
